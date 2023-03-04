@@ -7,6 +7,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
@@ -14,7 +15,6 @@ async function bootstrap() {
   const port = process.env.PORT || 3333;
   await app.listen(port);
 
-  console.log(123123123);
   Logger.log(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
   );

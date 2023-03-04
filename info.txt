@@ -1,0 +1,13 @@
+docker images - список образов на машине
+docker-compose build - собственно билд
+docker-compose up - запуск после билда
+docker-compose up --build - запуск после сборки
+  ports:
+      - "3000:3000"
+      слева порт локальной моей машины, справа докера
+
+docker logs service name
+
+docker compose -f docker-compose.yml -f docker-compose.development.yml up --build
+docker ps  -список процессы
+docker volume - оказать команды для вольюмов
