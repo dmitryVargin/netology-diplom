@@ -14,7 +14,7 @@ import { UsersService } from '../users/users.service';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UsersService
+    private readonly userService: UsersService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -42,15 +42,4 @@ export class AuthController {
     }
     return this.userService.create(data);
   }
-  // @Post('logout')
-  // async logout(@Body() data) {
-  //   const oldUser = await this.userService.findByEmail(data.email);
-  //   if (oldUser) {
-  //     throw new BadRequestException('Такой пользователь уже зарегистрирован');
-  //   }
-  //   return this.userService.create(data);
-  // }
-
-  // POST /api/auth/logout
-  // POST /api/client/register
 }

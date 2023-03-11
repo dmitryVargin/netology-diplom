@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Hotel } from '../../hotels/schemas/hotel.schema';
+
 import { User } from '../../users/schemas/user.schema';
 
-export type MessageDocument = Hotel & Document;
+export type MessageDocument = Message & Document;
 
 @Schema()
 export class Message {

@@ -17,13 +17,18 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/role.guard';
 import { Roles } from '../auth/role.decorator';
 
+// {
+//   "username": "qwe123@mail.ru",
+//   "password": "hash1"
+// }
+
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
 export class AdminController {
   constructor(
     private readonly hotelsService: HotelsService,
     private readonly hotelRoomsService: HotelRoomsService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
   ) {}
 
   @Get('hotels')
