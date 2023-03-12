@@ -9,8 +9,11 @@ import { SupportRequestsEmployeeService } from './support-request-employee.servi
 import { SupportRequestsClientService } from './support-request-client.service';
 import { Message, MessageSchema } from './schemas/messages.schemas';
 import { UsersModule } from '../users/users.module';
-import { ChatGateway } from '../chat/chat.gateway';
-import { ChatModule } from '../chat/chat.module';
+
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { MessageGateway } from './message.gateway';
+import { MessageListener } from './message.listener';
+import { ChatGateway } from './chat.gateway';
 
 @Module({
   imports: [
@@ -20,12 +23,15 @@ import { ChatModule } from '../chat/chat.module';
       { name: SupportRequest.name, schema: SupportRequestSchema },
       { name: Message.name, schema: MessageSchema },
     ]),
+    EventEmitterModule.forRoot(),
   ],
 
   providers: [
     SupportRequestsService,
     SupportRequestsEmployeeService,
     SupportRequestsClientService,
+    MessageListener,
+    MessageGateway,
     ChatGateway,
   ],
   exports: [
