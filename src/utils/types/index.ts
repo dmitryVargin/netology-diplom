@@ -2,7 +2,7 @@ import { ObjectId } from 'mongoose';
 
 export type ID = string | ObjectId;
 
-export type PaginationQuery = {
+export type SearchParams = {
   limit?: number;
   offset?: number;
 };

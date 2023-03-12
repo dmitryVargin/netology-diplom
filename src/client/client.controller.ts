@@ -58,6 +58,7 @@ export class ClientController {
     @Request() req: { user: RequestUser },
   ) {
     const { user } = req;
+    console.log(4444);
     return this.supportRequestsClientService.createSupportRequest({
       user: user.id,
       text,
@@ -66,7 +67,11 @@ export class ClientController {
 
   @Get('support-request')
   @Roles('client')
-  getSupportRequest(@Query() data) {
-    return this.supportRequestsService.findSupportRequests(data);
+  getSupportRequest(@Query() data, @Request() req: { user: RequestUser }) {
+    const { user } = req;
+    return this.supportRequestsService.findSupportRequests({
+      user: user.id,
+      ...data,
+    });
   }
 }

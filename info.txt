@@ -7,7 +7,7 @@ docker-compose up --build - запуск после сборки
       слева порт локальной моей машины, справа докера
 
 docker logs service name
-
-docker compose -f docker-compose.yml -f docker-compose.development.yml up --build
+// --build
+docker compose -f docker-compose.yml -f docker-compose.development.yml up
 docker ps  -список процессы
 docker volume - оказать команды для вольюмов

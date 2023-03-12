@@ -1,15 +1,16 @@
-import { ID } from '../utils/types';
+import { ID, SearchParams } from '../utils/types';
 import { HotelRoom } from './schemas/hotel-room.schema';
 
-export interface SearchRoomsParams {
-  limit: number;
-  offset: number;
+export interface SearchRoomsParams extends SearchParams {
   hotel: ID;
   isEnabled?: boolean;
 }
 
 export interface HotelRoomService {
-  create(data: Partial<HotelRoom>): Promise<HotelRoom>;
+  create(
+    data: Pick<HotelRoom, 'hotel' | 'isEnabled'> &
+      Partial<Pick<HotelRoom, 'images' | 'description'>>,
+  ): Promise<HotelRoom>;
 
   findById(id: ID): Promise<HotelRoom>;
 

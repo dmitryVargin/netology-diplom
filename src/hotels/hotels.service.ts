@@ -2,36 +2,71 @@ import { Injectable } from '@nestjs/common';
 import {
   IHotelService,
   SearchHotelParams,
+  CreateHotelParams,
   UpdateHotelParams,
 } from './hotels.interface';
 import { ID } from '../utils/types';
 import { Hotel, HotelDocument } from './schemas/hotel.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
+
+// РАБОТАЕТ
 
 @Injectable()
 export class HotelsService implements IHotelService {
   constructor(
-    @InjectModel(Hotel.name) private HotelModel: Model<HotelDocument>
+    @InjectModel(Hotel.name) private hotelModel: Model<HotelDocument>,
   ) {}
-  async create(data: any): Promise<Hotel> {
-    const hotel = new this.HotelModel(data);
-    return hotel.save();
+
+  async create(data: CreateHotelParams): Promise<Hotel> {
+    const hotel = new this.hotelModel(data);
+    const savedHotel = await hotel.save();
+    const answer = await this.hotelModel.aggregate([
+      { $match: { _id: savedHotel._id } },
+      { $project: { _id: 0, id: '$_id', title: 1, description: 1 } },
+    ]);
+    return answer[0];
   }
 
   async findById(id: ID): Promise<Hotel> {
-    return this.HotelModel.findById(id).select('-__v');
+    return this.hotelModel.findById(id).select('-__v');
   }
 
-  async search({ limit, offset, title }: SearchHotelParams): Promise<Hotel[]> {
-    return await this.HotelModel.find({ title })
+  async search({
+    limit = 100,
+    offset = 0,
+    title,
+  }: SearchHotelParams): Promise<Hotel[]> {
+    const aggregation: PipelineStage[] = [
+      { $project: { _id: 0, id: '$_id', title: 1, description: 1 } },
+    ];
+    if (title) {
+      aggregation.unshift({ $match: { title } });
+    }
+
+    return await this.hotelModel
+      .aggregate(aggregation)
       .skip(offset)
       .limit(limit)
-      .select('-__v')
       .exec();
   }
 
-  async update(id: ID, data: UpdateHotelParams): Promise<Hotel> {
-    return this.HotelModel.findOneAndUpdate({ _id: id }, data);
+  async update(
+    id: ID,
+    { title, description }: UpdateHotelParams,
+  ): Promise<Hotel> {
+    const updatedHotel = await this.hotelModel.findOneAndUpdate(
+      { _id: id },
+      {
+        title,
+        description,
+      },
+      { upsert: true },
+    );
+    const ans = await this.hotelModel.aggregate([
+      { $match: { _id: updatedHotel._id } },
+      { $project: { _id: 0, id: '$_id', title: 1, description: 1 } },
+    ]);
+    return ans[0];
   }
 }

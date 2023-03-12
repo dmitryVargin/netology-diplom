@@ -31,6 +31,7 @@ export class CommonController {
     private readonly supportRequestsService: SupportRequestsService,
   ) {}
 
+  // Работает
   @Get('hotel-rooms')
   getHotelRooms(@Query() data, @Request() req) {
     return this.hotelRoomsService.search({
@@ -39,6 +40,7 @@ export class CommonController {
     });
   }
 
+  // Работает
   @Get('hotel-rooms/:id')
   getHotelRoomById(@Param('id') id) {
     return this.hotelRoomsService.findById(id);
@@ -47,7 +49,10 @@ export class CommonController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('support-requests/:id/messages')
   @Roles('client', 'manager')
-  async getSupportRequestMessagesById(@Param('id') id) {
+  async getSupportRequestMessagesById(
+    @Param('id') id,
+    @Request() { user }: { user: RequestUser },
+  ) {
     return this.supportRequestsService.getMessages(id);
   }
 

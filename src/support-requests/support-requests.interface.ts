@@ -23,17 +23,26 @@ export interface GetChatListParams {
   isActive: boolean;
 }
 
+export type CreateSupportRequestResponse = {
+  id: string;
+  createdAt: Date;
+  isActive: boolean;
+  hasNewMessages: boolean;
+};
+
 export interface ISupportRequestService {
   findSupportRequests(params: GetChatListParams): Promise<SupportRequest[]>;
   sendMessage(data: SendMessageDto): Promise<Message>;
   getMessages(supportRequest: ID): Promise<Message[]>;
   subscribe(
-    handler: (supportRequest: SupportRequest, message: Message) => void
+    handler: (supportRequest: SupportRequest, message: Message) => void,
   ): () => void;
 }
 
 export interface ISupportRequestClientService {
-  createSupportRequest(data: CreateSupportRequestDto): Promise<SupportRequest>;
+  createSupportRequest(
+    data: CreateSupportRequestDto,
+  ): Promise<CreateSupportRequestResponse>;
   markMessagesAsRead(params: MarkMessagesAsReadDto);
   getUnreadCount(supportRequest: ID): Promise<Message[]>;
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   CreateSupportRequestDto,
+  CreateSupportRequestResponse,
   ISupportRequestClientService,
   MarkMessagesAsReadDto,
 } from './support-requests.interface';
@@ -20,49 +21,42 @@ export class SupportRequestsClientService
 {
   constructor(
     @InjectModel(SupportRequest.name)
-    private SupportRequestModel: Model<SupportRequestDocument>,
+    private supportRequestModel: Model<SupportRequestDocument>,
     @InjectModel(Message.name)
-    private MessageModel: Model<MessageDocument>,
+    private messageModel: Model<MessageDocument>,
   ) {}
 
   async createSupportRequest({
     text,
     user,
-  }: CreateSupportRequestDto): Promise<SupportRequest> {
-    const newSupportRequest = new this.SupportRequestModel({
-      user,
-      isActive: true,
-    });
-
-    const savedSupportRequest = await newSupportRequest.save();
-    console.log(898, savedSupportRequest);
-    const newMessage = await new this.MessageModel({
-      text,
+  }: CreateSupportRequestDto): Promise<CreateSupportRequestResponse> {
+    const messageSentAt = new Date();
+    const message = new this.messageModel({
       author: user,
-      sentAt: new Date(),
+      text,
+      sentAt: messageSentAt,
     });
-    console.log('newMessage', newMessage);
-    const savedMessage = await newMessage.save();
-    console.log('savedMessage', savedMessage);
-    const messages = [{ _id: savedMessage._id }];
-    console.log('messages', messages);
-    const updated = await this.SupportRequestModel.findOneAndUpdate(
-      { _id: savedSupportRequest._id },
-      {
-        messages,
-      },
-    );
+    await message.save();
+    const supportRequest = new this.supportRequestModel({
+      user,
+      messages: [message],
+    });
+    const created = await supportRequest.save();
 
-    console.log('updated savedSupportRequest', updated);
-
-    return updated;
+    return {
+      id: created._id,
+      createdAt: messageSentAt,
+      isActive: true,
+      hasNewMessages: false,
+    };
   }
 
   async getUnreadCount(supportRequestId: ID): Promise<Message[]> {
-    const supportRequest = await this.SupportRequestModel.find({
-      _id: supportRequestId,
-      messages: [{ $match: { readAt: { $exists: false } } }],
-    })
+    const supportRequest = await this.supportRequestModel
+      .find({
+        _id: supportRequestId,
+        messages: [{ $match: { readAt: { $exists: false } } }],
+      })
       .select('-__v')
       .exec();
     // @ts-ignore
@@ -71,13 +65,15 @@ export class SupportRequestsClientService
 
   // @ts-ignore
   async markMessagesAsRead({ id, createdBefore }) {
-    const answer = await this.SupportRequestModel.find({
-      _id: id,
-    }).exec();
+    const answer = await this.supportRequestModel
+      .find({
+        _id: id,
+      })
+      .exec();
     let messages = answer[0].messages;
     // @ts-ignore
     messages = messages.map((mess) => mess.id);
-    await this.MessageModel.updateMany(
+    await this.messageModel.updateMany(
       {
         _id: { $in: messages },
         readAt: { $exists: false },

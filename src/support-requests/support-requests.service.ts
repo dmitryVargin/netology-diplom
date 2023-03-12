@@ -8,34 +8,38 @@ import {
   SupportRequest,
   SupportRequestDocument,
 } from './schemas/support-requests.schemas';
-import { ID, PaginationQuery } from '../utils/types';
+import { ID, SearchParams } from '../utils/types';
 import { InjectModel, Prop } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message, MessageDocument } from './schemas/messages.schemas';
-import { SearchHotelParams } from '../hotels/hotels.interface';
-import { Hotel } from '../hotels/schemas/hotel.schema';
 import { Subject } from 'rxjs';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()
 export class SupportRequestsService implements ISupportRequestService {
-  private messagesSubject = new Subject<{ requestId: string; message: any }>();
   constructor(
     @InjectModel(SupportRequest.name)
-    private SupportRequestModel: Model<SupportRequestDocument>,
+    private supportRequestModel: Model<SupportRequestDocument>,
     @InjectModel(Message.name)
-    private MessageModel: Model<MessageDocument>,
-  ) {}
-
-  get messages() {
-    return this.messagesSubject.asObservable();
+    private messageModel: Model<MessageDocument>, // private eventEmitter: EventEmitter2, // private chatGateway: ChatGateway,
+  ) {
+    // this.subscribe(async (supportRequest: ID, message: Message) => {
+    //   this.chatGateway.server.emit('message', {
+    //     chatId: supportRequest,
+    //     message,
+    //   });
+    // });
   }
 
   async findSupportRequests({
-    limit,
-    offset,
+    limit = 100,
+    offset = 0,
     isActive,
-  }: GetChatListParams & PaginationQuery): Promise<SupportRequest[]> {
-    return await this.SupportRequestModel.find({ isActive })
+    user,
+  }: GetChatListParams & SearchParams): Promise<SupportRequest[]> {
+    return await this.supportRequestModel
+      .find({ user: user, isActive })
       .skip(offset)
       .limit(limit)
       .select('-__v')
@@ -43,10 +47,13 @@ export class SupportRequestsService implements ISupportRequestService {
   }
 
   async getMessages(supportRequestId: ID): Promise<Message[]> {
-    // @ts-ignore
-    return await this.SupportRequestModel.findById(supportRequestId)
-      .select('-__v')
-      .exec();
+    const supportRequestModel = await this.supportRequestModel.findById(
+      supportRequestId,
+    );
+
+    return this.messageModel.find({
+      _id: supportRequestModel.messages,
+    });
   }
 
   async sendMessage({
@@ -54,37 +61,23 @@ export class SupportRequestsService implements ISupportRequestService {
     author,
     supportRequest,
   }: SendMessageDto): Promise<any> {
-    const newMessage = await new this.MessageModel({
+    const supportRequestModel = await this.supportRequestModel.findById(
+      supportRequest,
+    );
+    const message = new this.messageModel({
+      author,
       text,
-      author: author,
       sentAt: new Date(),
     });
-    console.log('newMessage', newMessage);
-    const savedMessage = await newMessage.save();
-
-    const messages = [{ _id: savedMessage._id }];
-    console.log('messages', messages);
-    const updated = await this.SupportRequestModel.findOneAndUpdate(
-      { _id: supportRequest },
-      {
-        messages,
-      },
-    );
-
-    console.log('updated SupportRequestModel', updated);
-
-    this.messagesSubject.next({
-      requestId: supportRequest as string,
-      message: updated,
-    });
-
-    return updated;
+    await message.save();
+    supportRequestModel.messages.push(message);
+    await supportRequestModel.save();
+    // this.eventEmitter.emit('message', supportRequest, message);
+    return message;
   }
 
-  // TODO Сокеты
-  subscribe(
-    handler: (supportRequest: SupportRequest, message: Message) => void,
-  ): () => void {
-    return function () {};
+  //@ts-ignore
+  subscribe(handler: (supportRequest: ID, message: Message) => void) {
+    // this.eventEmitter.on('message', handler);
   }
 }

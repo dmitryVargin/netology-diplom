@@ -27,6 +27,6 @@ import { JwtService } from '@nestjs/jwt';
     ]),
   ],
   providers: [SupportRequestsService, ChatGateway, UIdService, JwtService],
-  exports: [SupportRequestsService, UIdService, JwtService],
+  exports: [SupportRequestsService, ChatGateway, UIdService, JwtService],
 })
 export class ChatModule {}

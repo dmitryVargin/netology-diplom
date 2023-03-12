@@ -17,6 +17,12 @@ import { Roles } from '../auth/role.decorator';
 import { SupportRequestsService } from '../support-requests/support-requests.service';
 import { WsGuard } from '../auth/ws.guards';
 
+// Что должно происходить
+// 1)юзер открывает типо чат с тех поддержкой, в этот момент он отправляет
+// message: subscribeToChat payload: chatId
+// мы его подписываем на обновления сообщений, т.е когда дергается sendMessage,
+// сокеты должны получить апдейт
+
 const options = {
   handlePreflightRequest: (req, res) => {
     const headers = {
@@ -40,20 +46,12 @@ export class ChatGateway {
   @WebSocketServer()
   server: any;
 
-  @UseGuards(WsGuard)
-  @UseGuards(RolesGuard)
-  @Roles('client', 'manager')
-  @SubscribeMessage('wait messages')
-  handleMessage(
-    @MessageBody() message,
-    @ConnectedSocket() client,
-  ): Observable<WsResponse<any>> {
-    return this.supportRequestsService.messages.pipe(
-      filter((update) => update.requestId === message.requestId),
-      map(({ message }) => ({
-        event: 'message',
-        data: message,
-      })),
-    );
+  // @UseGuards(WsGuard)
+  // @UseGuards(RolesGuard)
+  // @Roles('client', 'manager')
+  @SubscribeMessage('message')
+  handleMessage(@MessageBody() body, @ConnectedSocket() client) {
+    const { message, chatId } = body;
+    client.to(chatId).emit('message', message);
   }
 }
