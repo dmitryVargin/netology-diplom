@@ -33,24 +33,31 @@ export class ClientController {
     private readonly usersService: UsersService,
   ) {}
 
+  // Работает
   @Post('reservations')
   @Roles('client')
-  addReservation(@Body() data) {
-    return this.reservationsService.addReservation(data);
+  addReservation(@Body() data, @Request() req: { user: RequestUser }) {
+    return this.reservationsService.addReservation({
+      user: req.user.id,
+      ...data,
+    });
   }
 
+  // Работает
   @Get('reservations')
   @Roles('client')
   getReservations(@Query() params) {
     return this.reservationsService.getReservations(params);
   }
 
+  // Работает
   @Delete('reservations/:id')
   @Roles('client')
   removeReservation(@Param('id') id: ID) {
     return this.reservationsService.removeReservation(id);
   }
 
+  // Работает
   @Post('support-request')
   @Roles('client')
   createSupportRequest(
@@ -58,13 +65,13 @@ export class ClientController {
     @Request() req: { user: RequestUser },
   ) {
     const { user } = req;
-    console.log(4444);
     return this.supportRequestsClientService.createSupportRequest({
       user: user.id,
       text,
     });
   }
 
+  // Работает
   @Get('support-request')
   @Roles('client')
   getSupportRequest(@Query() data, @Request() req: { user: RequestUser }) {

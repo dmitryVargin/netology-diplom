@@ -17,10 +17,7 @@ import { SupportRequestsService } from '../support-requests/support-requests.ser
 import getIsEnabled from '../utils/getIsEnabled';
 import { RolesGuard } from '../auth/role.guard';
 import { Roles } from '../auth/role.decorator';
-import {
-  CreateSupportRequestDto,
-  SendMessageDto,
-} from '../support-requests/support-requests.interface';
+import { SendMessageDto } from '../support-requests/support-requests.interface';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('common')
@@ -46,6 +43,7 @@ export class CommonController {
     return this.hotelRoomsService.findById(id);
   }
 
+  // Работает
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('support-requests/:id/messages')
   @Roles('client', 'manager')
@@ -56,6 +54,7 @@ export class CommonController {
     return this.supportRequestsService.getMessages(id);
   }
 
+  // Работает
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('support-requests/:id/messages')
   @Roles('client', 'manager')
@@ -70,12 +69,15 @@ export class CommonController {
       text,
     });
   }
+
+  // Работает
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('support-requests/:id/messages/read')
   @Roles('client', 'manager')
   async messagesRead(@Body() body: { createdBefore: string }, @Param() params) {
     const { createdBefore } = body;
     const id = params.id;
+
     return await this.supportRequestsClientService.markMessagesAsRead({
       id,
       createdBefore,

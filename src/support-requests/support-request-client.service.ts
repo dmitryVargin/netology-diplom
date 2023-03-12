@@ -63,23 +63,26 @@ export class SupportRequestsClientService
     return supportRequest;
   }
 
+  // Работает
   // @ts-ignore
   async markMessagesAsRead({ id, createdBefore }) {
     const answer = await this.supportRequestModel
-      .find({
+      .findOne({
         _id: id,
       })
       .exec();
-    let messages = answer[0].messages;
-    // @ts-ignore
-    messages = messages.map((mess) => mess.id);
+
     await this.messageModel.updateMany(
       {
-        _id: { $in: messages },
+        _id: { $in: answer.messages },
+        sentAt: {
+          $lt: createdBefore,
+        },
         readAt: { $exists: false },
       },
       { readAt: createdBefore },
     );
+
     return {
       success: true,
     };

@@ -6,30 +6,38 @@ import {
 } from './reservations.interface';
 import { Reservation, ReservationDocument } from './schemas/reservation.schema';
 import { ID } from '../utils/types';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel, Prop } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 @Injectable()
 export class ReservationsService implements IReservation {
   constructor(
     @InjectModel(Reservation.name)
-    private ReservationModel: Model<ReservationDocument>
+    private reservationModel: Model<ReservationDocument>,
   ) {}
-  async addReservation(data: ReservationDto): Promise<Reservation> {
-    return Promise.resolve(undefined);
-  }
+  // Работает
 
+  async addReservation({
+    // @ts-ignore
+    user,
+    ...data
+  }: ReservationDto): Promise<Reservation> {
+    const reservation = new this.reservationModel({ userId: user, ...data });
+    return reservation.save();
+  }
+  // Работает
   async getReservations(
-    filter: ReservationSearchOptions
+    filter: ReservationSearchOptions,
   ): Promise<Array<Reservation>> {
-    return this.ReservationModel.find(filter);
+    return this.reservationModel.find(filter);
   }
 
-  async findById(id: ID): Promise<Reservation> {
-    return this.ReservationModel.findById(id).select('-__v');
+  async findByUserId(id: ID): Promise<Reservation> {
+    // @ts-ignore
+    return this.reservationModel.find();
   }
 
   async removeReservation(id: ID): Promise<void> {
-    return this.ReservationModel.findOneAndRemove({ _id: id });
+    return this.reservationModel.findOneAndRemove({ _id: id });
   }
 }

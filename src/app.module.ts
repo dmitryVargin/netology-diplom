@@ -6,6 +6,7 @@ import { CommonModule } from './common/common.module';
 import { ClientModule } from './client/client.module';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
+import { ManagerModule } from './manager/manager.module';
 
 const options = {
   useNewUrlParser: true,
@@ -24,6 +25,7 @@ const options = {
     AdminModule,
     CommonModule,
     ClientModule,
+    ManagerModule,
     AuthModule,
     ChatModule,
   ],
