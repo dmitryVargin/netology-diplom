@@ -20,19 +20,8 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
-    console.log('login', req.user);
     return this.authService.login(req.user);
   }
-
-  // "passwordHash": "hash1",
-  // {
-  //   "email": "qwe123@mail.ru",
-  //   "passwordHash": "$2a$10$ZliHmxzGeqVSsBSmclOaxOWd/u.f7AhFsnaLjRhn2tRshJmPN2R92",
-  //   "name": "Vasya",
-  //   "role": "admin",
-  //   "_id": "63e91b90d7335ef788bf8b74",
-  //   "__v": 0
-  // }
 
   @Post('register')
   async register(@Body() data) {

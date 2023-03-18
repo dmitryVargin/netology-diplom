@@ -34,9 +34,7 @@ export interface ISupportRequestService {
   findSupportRequests(params: GetChatListParams): Promise<SupportRequest[]>;
   sendMessage(data: SendMessageDto): Promise<Message>;
   getMessages(supportRequest: ID): Promise<Message[]>;
-  subscribe(
-    handler: (supportRequest: SupportRequest, message: Message) => void,
-  ): () => void;
+  subscribe(handler: (supportRequest: ID, message: Message) => void): void;
 }
 
 export interface ISupportRequestClientService {
@@ -44,11 +42,11 @@ export interface ISupportRequestClientService {
     data: CreateSupportRequestDto,
   ): Promise<CreateSupportRequestResponse>;
   markMessagesAsRead(params: MarkMessagesAsReadDto);
-  getUnreadCount(supportRequest: ID): Promise<Message[]>;
+  getUnreadCount(supportRequest: ID): Promise<number>;
 }
 
 export interface ISupportRequestEmployeeService {
   markMessagesAsRead(params: MarkMessagesAsReadDto);
-  getUnreadCount(supportRequest: ID): Promise<Message[]>;
+  getUnreadCount(supportRequest: ID): Promise<number>;
   closeRequest(supportRequest: ID): Promise<void>;
 }

@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ISupportRequestEmployeeService,
-  MarkMessagesAsReadDto,
-} from './support-requests.interface';
+import { ISupportRequestEmployeeService } from './support-requests.interface';
 import { ID } from '../utils/types';
 import { Message, MessageDocument } from './schemas/messages.schemas';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,42 +15,46 @@ export class SupportRequestsEmployeeService
 {
   constructor(
     @InjectModel(SupportRequest.name)
-    private SupportRequestModel: Model<SupportRequestDocument>,
+    private supportRequestModel: Model<SupportRequestDocument>,
     @InjectModel(Message.name)
-    private MessageModel: Model<MessageDocument>,
+    private messageModel: Model<MessageDocument>,
   ) {}
   async closeRequest(supportRequestId: ID): Promise<void> {
-    const supportRequest = await this.SupportRequestModel.findOneAndUpdate(
+    this.supportRequestModel.findOneAndUpdate(
       { _id: supportRequestId },
       { isActive: false },
     );
   }
 
-  async getUnreadCount(supportRequestId: ID): Promise<Message[]> {
-    const supportRequest = await this.SupportRequestModel.find({
-      _id: supportRequestId,
-      messages: [{ $match: { readAt: { $exists: false } } }],
-    })
+  async getUnreadCount(supportRequestId: ID): Promise<number> {
+    const supportRequest = await this.supportRequestModel
+      .find({
+        _id: supportRequestId,
+        messages: [{ $match: { readAt: { $exists: false } } }],
+      })
       .select('-__v')
       .exec();
-    // @ts-ignore
-    return supportRequest;
+    return supportRequest.length;
   }
 
-  async markMessagesAsRead({ user, createdBefore }: MarkMessagesAsReadDto) {
-    const answer = await this.SupportRequestModel.find({
-      _id: user,
-    }).exec();
-    let messages = answer[0].messages;
-    // @ts-ignore
-    messages = messages.map((mess) => mess.id);
-    await this.MessageModel.updateMany(
+  async markMessagesAsRead({ supportRequest, createdBefore }) {
+    const answer = await this.supportRequestModel
+      .findOne({
+        _id: supportRequest,
+      })
+      .exec();
+
+    await this.messageModel.updateMany(
       {
-        _id: { $in: messages },
+        _id: { $in: answer.messages },
+        sentAt: {
+          $lt: createdBefore,
+        },
         readAt: { $exists: false },
       },
       { readAt: createdBefore },
     );
+
     return {
       success: true,
     };

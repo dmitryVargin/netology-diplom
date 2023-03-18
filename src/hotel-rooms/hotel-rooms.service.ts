@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HotelRoomService, SearchRoomsParams } from './hotel-rooms.interface';
 import { HotelRoom, HotelRoomDocument } from './schemas/hotel-room.schema';
 import { ID } from '../utils/types';
-import mongoose, { Model, Schema } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class HotelRoomsService implements HotelRoomService {
     hotel,
     images,
     isEnabled,
-  }: Pick<HotelRoom, 'hotel' | 'isEnabled'> &
+  }: { hotel: ID } & Pick<HotelRoom, 'isEnabled'> &
     Partial<Pick<HotelRoom, 'images' | 'description'>>): Promise<HotelRoom> {
     const createdRoom = new this.hotelRoomModel({
       description,
@@ -25,8 +25,7 @@ export class HotelRoomsService implements HotelRoomService {
       images,
       isEnabled,
     });
-    const savedRoom = await createdRoom.save();
-    return savedRoom;
+    return await createdRoom.save();
   }
 
   async findById(id: ID): Promise<HotelRoom> {

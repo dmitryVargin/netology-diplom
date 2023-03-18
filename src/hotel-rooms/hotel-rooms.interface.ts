@@ -8,7 +8,7 @@ export interface SearchRoomsParams extends SearchParams {
 
 export interface HotelRoomService {
   create(
-    data: Pick<HotelRoom, 'hotel' | 'isEnabled'> &
+    data: { hotel: ID } & Pick<HotelRoom, 'isEnabled'> &
       Partial<Pick<HotelRoom, 'images' | 'description'>>,
   ): Promise<HotelRoom>;
 

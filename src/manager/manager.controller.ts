@@ -1,11 +1,8 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
   Param,
-  Post,
-  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -26,28 +23,24 @@ export class ManagerController {
     private readonly usersService: UsersService,
   ) {}
 
-  // Работает
   @Get('reservations/:id')
   @Roles('manager')
   get(@Param('id') id: ID) {
     return this.reservationsService.findByUserId(id);
   }
 
-  // Работает
   @Delete('reservations/:id')
   @Roles('manager')
   delete(@Param('id') id: ID) {
     return this.reservationsService.removeReservation(id);
   }
 
-  // Работает
   @Get('users')
   @Roles('manager')
   getUsers(@Query() data) {
     return this.usersService.findAll(data);
   }
 
-  // Работает
   @Get('support-request')
   @Roles('manager')
   getSupportRequest(@Query() data) {

@@ -1,14 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserDocument } from '../users/schemas/user.schema';
+import { UserDocument } from '../users/schemas/user.schema';
 import { compareSync } from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   async validateUser(email: string, pass: string) {
@@ -20,7 +20,10 @@ export class AuthService {
     if (!isCorrectPassword) {
       throw new UnauthorizedException('Wrong password');
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { name, passwordHash, ...data } = user;
+
     return data;
   }
 

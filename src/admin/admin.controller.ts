@@ -6,7 +6,6 @@ import {
   Post,
   Put,
   Query,
-  Request,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -32,27 +31,25 @@ export class AdminController {
     private readonly hotelRoomsService: HotelRoomsService,
     private readonly usersService: UsersService,
   ) {}
-  // Работает
+
   @Get('hotels')
   @Roles('admin')
   getHotels(@Query() params) {
-    console.log(params, 'params');
     return this.hotelsService.search(params);
   }
-  // Работает
+
   @Post('hotels')
   @Roles('admin')
   createHotel(@Body() data) {
     return this.hotelsService.create(data);
   }
-  // Работает
+
   @Put('hotels/:id')
   @Roles('admin')
   updateHotel(@Param('id') id: ID, @Body() data) {
     return this.hotelsService.update(id, data);
   }
 
-  // Работает
   @Post('hotel-rooms')
   @Roles('admin')
   @UseInterceptors(
@@ -64,8 +61,6 @@ export class AdminController {
       fileFilter: imageFileFilter,
     }),
   )
-
-  // Работает
   createHotelRoom(
     @UploadedFiles() files,
     @Body()
@@ -78,28 +73,24 @@ export class AdminController {
     const isEnabled = true;
     return this.hotelRoomsService.create({
       description,
-      // @ts-ignore
       hotel: hotelId,
       images,
       isEnabled,
     });
   }
 
-  // Работает
   @Put('hotel-rooms/:id')
   @Roles('admin')
   updateHotelRoom(@Param('id') id: ID, @Body() data) {
     return this.hotelRoomsService.update(id, data);
   }
 
-  // Работает
   @Roles('admin')
   @Get('users')
   getUsers(@Query() data) {
     return this.usersService.findAll(data);
   }
 
-  // Работает
   @Roles('admin')
   @Post('users')
   createUser(@Body() data) {

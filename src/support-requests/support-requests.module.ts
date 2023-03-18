@@ -12,7 +12,6 @@ import { UsersModule } from '../users/users.module';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MessageGateway } from './message.gateway';
-import { MessageListener } from './message.listener';
 import { ChatGateway } from './chat.gateway';
 
 @Module({
@@ -30,7 +29,6 @@ import { ChatGateway } from './chat.gateway';
     SupportRequestsService,
     SupportRequestsEmployeeService,
     SupportRequestsClientService,
-    MessageListener,
     MessageGateway,
     ChatGateway,
   ],

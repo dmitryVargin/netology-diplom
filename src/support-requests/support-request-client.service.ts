@@ -3,7 +3,6 @@ import {
   CreateSupportRequestDto,
   CreateSupportRequestResponse,
   ISupportRequestClientService,
-  MarkMessagesAsReadDto,
 } from './support-requests.interface';
 import {
   SupportRequest,
@@ -11,9 +10,9 @@ import {
 } from './schemas/support-requests.schemas';
 import { ID } from '../utils/types';
 import { Message, MessageDocument } from './schemas/messages.schemas';
-import { InjectModel, Prop } from '@nestjs/mongoose';
-import { Hotel, HotelDocument } from '../hotels/schemas/hotel.schema';
-import mongoose, { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+
+import { Model } from 'mongoose';
 
 @Injectable()
 export class SupportRequestsClientService
@@ -51,24 +50,21 @@ export class SupportRequestsClientService
     };
   }
 
-  async getUnreadCount(supportRequestId: ID): Promise<Message[]> {
-    const supportRequest = await this.supportRequestModel
-      .find({
-        _id: supportRequestId,
-        messages: [{ $match: { readAt: { $exists: false } } }],
-      })
-      .select('-__v')
-      .exec();
-    // @ts-ignore
-    return supportRequest;
+  async getUnreadCount(supportRequestId: ID): Promise<number> {
+    const supportRequest = await this.supportRequestModel.findById(
+      supportRequestId,
+    );
+    const messages = await this.messageModel.find({
+      _id: supportRequest.messages,
+    });
+
+    return messages.filter((message) => message?.readAt === undefined).length;
   }
 
-  // Работает
-  // @ts-ignore
-  async markMessagesAsRead({ id, createdBefore }) {
+  async markMessagesAsRead({ supportRequest, createdBefore }) {
     const answer = await this.supportRequestModel
       .findOne({
-        _id: id,
+        _id: supportRequest,
       })
       .exec();
 

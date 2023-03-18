@@ -18,6 +18,6 @@ export interface IReservation {
   addReservation(data: ReservationDto): Promise<Reservation>;
   removeReservation(id: ID): Promise<void>;
   getReservations(
-    filter: ReservationSearchOptions
+    filter: ReservationSearchOptions,
   ): Promise<Array<Reservation>>;
 }

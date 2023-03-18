@@ -5,15 +5,11 @@ import {
   Get,
   Param,
   Post,
-  Put,
   Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
-import type { Request as ExpressRequest } from 'express';
-import { HotelsService } from '../hotels/hotels.service';
-import { HotelRoomsService } from '../hotel-rooms/hotel-rooms.service';
-import { UsersService } from '../users/users.service';
+
 import { ReservationsService } from '../reservations/reservations.service';
 import { SupportRequestsService } from '../support-requests/support-requests.service';
 import { ID, RequestUser } from '../utils/types';
@@ -30,10 +26,8 @@ export class ClientController {
     private readonly reservationsService: ReservationsService,
     private readonly supportRequestsClientService: SupportRequestsClientService,
     private readonly supportRequestsService: SupportRequestsService,
-    private readonly usersService: UsersService,
   ) {}
 
-  // Работает
   @Post('reservations')
   @Roles('client')
   addReservation(@Body() data, @Request() req: { user: RequestUser }) {
@@ -43,21 +37,18 @@ export class ClientController {
     });
   }
 
-  // Работает
   @Get('reservations')
   @Roles('client')
   getReservations(@Query() params) {
     return this.reservationsService.getReservations(params);
   }
 
-  // Работает
   @Delete('reservations/:id')
   @Roles('client')
   removeReservation(@Param('id') id: ID) {
     return this.reservationsService.removeReservation(id);
   }
 
-  // Работает
   @Post('support-request')
   @Roles('client')
   createSupportRequest(
@@ -71,7 +62,6 @@ export class ClientController {
     });
   }
 
-  // Работает
   @Get('support-request')
   @Roles('client')
   getSupportRequest(@Query() data, @Request() req: { user: RequestUser }) {

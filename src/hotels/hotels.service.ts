@@ -10,8 +10,6 @@ import { Hotel, HotelDocument } from './schemas/hotel.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
 
-// РАБОТАЕТ
-
 @Injectable()
 export class HotelsService implements IHotelService {
   constructor(

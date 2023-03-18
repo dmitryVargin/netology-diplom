@@ -4,13 +4,12 @@ import {
   Get,
   Param,
   Post,
-  Put,
   Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { HotelRoomsService } from '../hotel-rooms/hotel-rooms.service';
-import { ID, RequestUser } from '../utils/types';
+import { RequestUser } from '../utils/types';
 import { SupportRequestsClientService } from '../support-requests/support-request-client.service';
 import { SupportRequestsService } from '../support-requests/support-requests.service';
 
@@ -28,7 +27,6 @@ export class CommonController {
     private readonly supportRequestsService: SupportRequestsService,
   ) {}
 
-  // Работает
   @Get('hotel-rooms')
   getHotelRooms(@Query() data, @Request() req) {
     return this.hotelRoomsService.search({
@@ -37,24 +35,24 @@ export class CommonController {
     });
   }
 
-  // Работает
   @Get('hotel-rooms/:id')
   getHotelRoomById(@Param('id') id) {
     return this.hotelRoomsService.findById(id);
   }
 
-  // Работает
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('support-requests/:id/messages')
   @Roles('client', 'manager')
-  async getSupportRequestMessagesById(
-    @Param('id') id,
-    @Request() { user }: { user: RequestUser },
-  ) {
+  async getSupportRequestMessagesById(@Param('id') id) {
     return this.supportRequestsService.getMessages(id);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('support-requests/:id/messages/unread_count')
+  @Roles('client', 'manager')
+  async getMessagesUnreadCount(@Param('id') id) {
+    return this.supportRequestsClientService.getUnreadCount(id);
+  }
 
-  // Работает
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('support-requests/:id/messages')
   @Roles('client', 'manager')
@@ -70,16 +68,15 @@ export class CommonController {
     });
   }
 
-  // Работает
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('support-requests/:id/messages/read')
   @Roles('client', 'manager')
-  async messagesRead(@Body() body: { createdBefore: string }, @Param() params) {
-    const { createdBefore } = body;
-    const id = params.id;
-
+  async messagesRead(
+    @Body() { createdBefore }: { createdBefore: string },
+    @Param() { id: supportRequestId },
+  ) {
     return await this.supportRequestsClientService.markMessagesAsRead({
-      id,
+      supportRequest: supportRequestId,
       createdBefore,
     });
   }

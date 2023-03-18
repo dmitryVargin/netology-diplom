@@ -11,7 +11,6 @@ export class UsersService implements IUserService {
   constructor(@InjectModel(User.name) private UserModel: Model<UserDocument>) {}
   async create({ passwordHash, ...data }: Partial<User>): Promise<User> {
     const salt = genSaltSync(10);
-    console.log(passwordHash, salt);
     const user = new this.UserModel({
       passwordHash: hashSync(passwordHash, salt),
       ...data,

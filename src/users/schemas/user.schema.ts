@@ -8,11 +8,6 @@ export class User {
   @Prop({
     validate: {
       validator: async function (email) {
-        const validateEmail = function (email) {
-          const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-          return re.test(email);
-        };
-
         const user = await this.constructor.findOne({ email });
         if (user) {
           return this.id === user.id;

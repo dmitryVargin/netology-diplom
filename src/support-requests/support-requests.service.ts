@@ -9,7 +9,7 @@ import {
   SupportRequestDocument,
 } from './schemas/support-requests.schemas';
 import { ID, SearchParams } from '../utils/types';
-import { InjectModel, Prop } from '@nestjs/mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message, MessageDocument } from './schemas/messages.schemas';
 
@@ -49,10 +49,7 @@ export class SupportRequestsService implements ISupportRequestService {
       .exec();
   }
   async findSupportRequest(supportRequestId: ID) {
-    const supportRequest = await this.supportRequestModel.findById(
-      supportRequestId,
-    );
-    return supportRequest;
+    return this.supportRequestModel.findById(supportRequestId);
   }
 
   async getMessages(supportRequestId: ID): Promise<Message[]> {
@@ -85,7 +82,6 @@ export class SupportRequestsService implements ISupportRequestService {
     return message;
   }
 
-  // @ts-ignore
   subscribe(handler: (supportRequest: ID, message: Message) => void) {
     this.eventEmitter.on('message', handler);
   }
