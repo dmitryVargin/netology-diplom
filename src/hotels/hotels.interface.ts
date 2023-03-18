@@ -1,22 +1,22 @@
-import { ID, SearchParams } from '../utils/types';
+import { ID, SearchParams, WithId } from '../utils/types';
 import { Hotel } from './schemas/hotel.schema';
 
-export interface SearchHotelParams extends SearchParams {
+export type SearchHotelParams = SearchParams & {
   title?: string;
-}
+};
 
-export interface UpdateHotelParams {
+export type UpdateHotelParams = {
   title?: string;
   description?: string;
-}
-export interface CreateHotelParams {
+};
+export type CreateHotelParams = {
   title: string;
   description?: string;
-}
+};
 
 export interface IHotelService {
-  create(data: CreateHotelParams): Promise<Hotel>;
-  findById(id: ID): Promise<Hotel>;
-  search(params: SearchHotelParams): Promise<Hotel[]>;
-  update(id: ID, data: UpdateHotelParams): Promise<Hotel>;
+  create(params: CreateHotelParams): Promise<WithId<Hotel>>;
+  findById(hotelId: ID): Promise<WithId<Hotel>>;
+  search(params: SearchHotelParams): Promise<WithId<Hotel>[]>;
+  update(hotelId: ID, params: UpdateHotelParams): Promise<WithId<Hotel>>;
 }

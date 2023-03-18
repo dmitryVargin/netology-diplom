@@ -22,6 +22,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { editFileName, imageFileFilter } from '../configs/image.upload.config';
 import { HotelRoom } from '../hotel-rooms/schemas/hotel-room.schema';
+import { UpdateHotelParams } from '../hotels/hotels.interface';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -37,6 +38,11 @@ export class AdminController {
   getHotels(@Query() params) {
     return this.hotelsService.search(params);
   }
+  @Get('hotels/:id')
+  @Roles('admin')
+  getHotelById(@Param() { id }) {
+    return this.hotelsService.findById(id);
+  }
 
   @Post('hotels')
   @Roles('admin')
@@ -46,8 +52,8 @@ export class AdminController {
 
   @Put('hotels/:id')
   @Roles('admin')
-  updateHotel(@Param('id') id: ID, @Body() data) {
-    return this.hotelsService.update(id, data);
+  updateHotel(@Param('id') hotelId: ID, @Body() data: UpdateHotelParams) {
+    return this.hotelsService.update(hotelId, data);
   }
 
   @Post('hotel-rooms')

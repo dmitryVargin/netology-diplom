@@ -5,10 +5,19 @@ import {
   CreateHotelParams,
   UpdateHotelParams,
 } from './hotels.interface';
-import { ID } from '../utils/types';
+import { ID, WithId } from '../utils/types';
 import { Hotel, HotelDocument } from './schemas/hotel.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage } from 'mongoose';
+import { Model } from 'mongoose';
+import getNonEmptyFields from '../utils/getNonEmptyFields';
+import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
+
+const hotelSelection = {
+  _id: 0,
+  id: '$_id',
+  title: 1,
+  description: 1,
+} as const;
 
 @Injectable()
 export class HotelsService implements IHotelService {
@@ -16,55 +25,48 @@ export class HotelsService implements IHotelService {
     @InjectModel(Hotel.name) private hotelModel: Model<HotelDocument>,
   ) {}
 
-  async create(data: CreateHotelParams): Promise<Hotel> {
-    const hotel = new this.hotelModel(data);
-    const savedHotel = await hotel.save();
-    const answer = await this.hotelModel.aggregate([
-      { $match: { _id: savedHotel._id } },
-      { $project: { _id: 0, id: '$_id', title: 1, description: 1 } },
-    ]);
-    return answer[0];
+  async create(params: CreateHotelParams): Promise<WithId<Hotel>> {
+    const hotel = new this.hotelModel(params);
+    const { _id, title, description } = await hotel.save();
+    return { id: _id, title, description };
   }
 
-  async findById(id: ID): Promise<Hotel> {
-    return this.hotelModel.findById(id).select('-__v');
+  findById(hotelId: ID): Promise<WithId<Hotel>> {
+    return this.hotelModel
+      .findById(hotelId)
+      .select(hotelSelection)
+      .exec() as Promise<WithId<Hotel>>;
   }
 
-  async search({
-    limit = 100,
-    offset = 0,
+  search({
+    limit = LIMIT_DEFAULT,
+    offset = OFFSET_DEFAULT,
     title,
-  }: SearchHotelParams): Promise<Hotel[]> {
-    const aggregation: PipelineStage[] = [
-      { $project: { _id: 0, id: '$_id', title: 1, description: 1 } },
-    ];
-    if (title) {
-      aggregation.unshift({ $match: { title } });
-    }
-
-    return await this.hotelModel
-      .aggregate(aggregation)
+  }: SearchHotelParams): Promise<WithId<Hotel>[]> {
+    return this.hotelModel
+      .find(getNonEmptyFields({ title }))
       .skip(offset)
       .limit(limit)
-      .exec();
+      .select(hotelSelection)
+      .exec() as Promise<WithId<Hotel>[]>;
   }
 
-  async update(
-    id: ID,
+  // TODO валидация
+  // TODO обработка ошибок
+  update(
+    hotelId: ID,
     { title, description }: UpdateHotelParams,
-  ): Promise<Hotel> {
-    const updatedHotel = await this.hotelModel.findOneAndUpdate(
-      { _id: id },
-      {
-        title,
-        description,
-      },
-      { upsert: true },
-    );
-    const ans = await this.hotelModel.aggregate([
-      { $match: { _id: updatedHotel._id } },
-      { $project: { _id: 0, id: '$_id', title: 1, description: 1 } },
-    ]);
-    return ans[0];
+  ): Promise<WithId<Hotel>> {
+    return this.hotelModel
+      .findByIdAndUpdate(
+        hotelId,
+        {
+          title,
+          description,
+        },
+        { new: true },
+      )
+      .select(hotelSelection)
+      .exec() as Promise<WithId<Hotel>>;
   }
 }

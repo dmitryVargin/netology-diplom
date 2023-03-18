@@ -13,3 +13,5 @@ export type RequestUser = {
   id: string;
   role: Roles;
 };
+
+export type WithId<T> = T & { id: ID };
