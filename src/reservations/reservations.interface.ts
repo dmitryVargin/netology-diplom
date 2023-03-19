@@ -1,23 +1,46 @@
 import { ID } from '../utils/types';
 import { Reservation } from './schemas/reservation.schema';
+import { Prop } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
+import { User } from '../users/schemas/user.schema';
+import { Hotel } from '../hotels/schemas/hotel.schema';
+import { HotelRoom } from '../hotel-rooms/schemas/hotel-room.schema';
 
-export interface ReservationDto {
+export type ManagerReservationSearchOptions = {
   userId: ID;
-  hotelId: ID;
-  roomId: ID;
+  dateStart?: Date;
+  dateEnd?: Date;
+};
+export type ClientReservationSearchOptions = {
+  dateStart?: Date;
+  dateEnd?: Date;
+};
+export type GetReservations = {
+  userId: ID;
+  dateStart?: Date;
+  dateEnd?: Date;
+};
+
+export type ReservationsResponse = {
+  startDate: Date;
+  endDate: Date;
+  hotel: Hotel;
+  hotelRoom: Pick<HotelRoom, 'description' | 'images'>;
+};
+
+export type AddClientReservation = {
+  hotelRoom: ID;
   dateStart: Date;
   dateEnd: Date;
-}
-
-export interface ReservationSearchOptions {
+};
+export type AddReservationParams = {
   userId: ID;
-  dateStart: Date;
-  dateEnd: Date;
-}
+  hotelRoom: ID;
+  startDate: Date;
+  endDate: Date;
+};
 export interface IReservation {
-  addReservation(data: ReservationDto): Promise<Reservation>;
-  removeReservation(id: ID): Promise<void>;
-  getReservations(
-    filter: ReservationSearchOptions,
-  ): Promise<Array<Reservation>>;
+  addReservation(data: AddReservationParams): Promise<ReservationsResponse>;
+  removeReservation(reservationId: ID): Promise<void>;
+  getReservations(filter: GetReservations): Promise<ReservationsResponse[]>;
 }

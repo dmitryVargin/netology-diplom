@@ -12,7 +12,7 @@ import { Model } from 'mongoose';
 import getNonEmptyFields from '../utils/getNonEmptyFields';
 import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
 
-export const hotelSelection = {
+export const hotelProjection = {
   _id: 0,
   id: '$_id',
   title: 1,
@@ -37,18 +37,18 @@ export class HotelsService implements IHotelService {
     title,
   }: SearchHotelParams): Promise<WithId<Hotel>[]> {
     return this.hotelModel
-      .find(getNonEmptyFields({ title }))
+      .find(getNonEmptyFields({ title }), hotelProjection)
       .skip(offset)
       .limit(limit)
-      .select(hotelSelection)
       .exec() as Promise<WithId<Hotel>[]>;
   }
 
   async findById(hotelId: ID): Promise<WithId<Hotel>> {
     try {
-      return (await this.hotelModel
-        .findById(hotelId)
-        .select(hotelSelection)) as WithId<Hotel>;
+      return (await this.hotelModel.findById(
+        hotelId,
+        hotelProjection,
+      )) as WithId<Hotel>;
     } catch (e) {
       throw new NotFoundException();
     }
@@ -66,9 +66,8 @@ export class HotelsService implements IHotelService {
             title,
             description,
           },
-          { new: true },
+          { new: true, select: hotelProjection },
         )
-        .select(hotelSelection)
         .exec()) as WithId<Hotel>;
     } catch (e) {
       throw new NotFoundException();

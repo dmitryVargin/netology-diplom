@@ -25,8 +25,8 @@ export class ManagerController {
 
   @Get('reservations/:id')
   @Roles('manager')
-  get(@Param('id') id: ID) {
-    return this.reservationsService.findByUserId(id);
+  get(@Param('id') userId: ID) {
+    return this.reservationsService.getReservations({ userId });
   }
 
   @Delete('reservations/:id')

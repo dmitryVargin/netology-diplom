@@ -14,7 +14,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
 import { Hotel, HotelDocument } from '../hotels/schemas/hotel.schema';
-import { hotelSelection } from '../hotels/hotels.service';
+import { hotelProjection } from '../hotels/hotels.service';
 
 @Injectable()
 export class HotelRoomsService implements HotelRoomService {
@@ -42,8 +42,7 @@ export class HotelRoomsService implements HotelRoomService {
     } = await createdRoom.save();
 
     const hotel = (await this.hotelModel
-      .findById(hotelId)
-      .select(hotelSelection)
+      .findById(hotelId, hotelProjection)
       .exec()) as WithId<Hotel>;
 
     return { id: _id, hotel, description, images, isEnabled: true };
@@ -63,11 +62,11 @@ export class HotelRoomsService implements HotelRoomService {
       .skip(offset)
       .limit(limit);
 
-    const foundHotel = (await this.hotelModel
-      .findById(hotel)
-      .select({ _id: 0, id: '$_id', title: 1 })) as WithId<
-      Pick<Hotel, 'title'>
-    >;
+    const foundHotel = (await this.hotelModel.findById(hotel, {
+      _id: 0,
+      id: '$_id',
+      title: 1,
+    })) as WithId<Pick<Hotel, 'title'>>;
 
     return hotelRoom.map((hotelRoom) => ({
       id: hotelRoom.id,
@@ -83,7 +82,7 @@ export class HotelRoomsService implements HotelRoomService {
       const { _id, description, images, hotel } =
         (await this.hotelRoomModel.findById(hotelRoomId)) as HotelRoomDocument;
 
-      const foundHotel = (await this.hotelModel.findById(hotel).select({
+      const foundHotel = (await this.hotelModel.findById(hotel, {
         _id: 0,
         id: '$_id',
         title: 1,
@@ -120,8 +119,7 @@ export class HotelRoomsService implements HotelRoomService {
       )) as HotelRoomDocument;
 
       const hotel = (await this.hotelModel
-        .findById(hotelId)
-        .select(hotelSelection)
+        .findById(hotelId, hotelProjection)
         .exec()) as WithId<Hotel>;
 
       return { id: hotelRoomId, hotel, description, images, isEnabled };

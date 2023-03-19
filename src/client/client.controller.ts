@@ -18,6 +18,13 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/role.guard';
 import { Roles } from '../auth/role.decorator';
 import { CreateSupportRequestDto } from '../support-requests/support-requests.interface';
+import {
+  AddClientReservation,
+  AddReservationParams,
+  ClientReservationSearchOptions,
+} from '../reservations/reservations.interface';
+
+import User from '../auth/user.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('client')
@@ -31,19 +38,26 @@ export class ClientController {
   @Post('reservations')
   @Roles('client')
   addReservation(
-    @Body() data,
-    @Request() { user: { id } }: { user: RequestUser },
+    @Body() data: AddClientReservation,
+    @User() user?: RequestUser,
   ) {
     return this.reservationsService.addReservation({
-      user: id,
-      ...data,
+      userId: user.id,
+      hotelRoom: data.hotelRoom,
+      startDate: data.dateStart,
+      endDate: data.dateEnd,
     });
   }
-
   @Get('reservations')
   @Roles('client')
-  getReservations(@Query() params) {
-    return this.reservationsService.getReservations(params);
+  getReservations(
+    @Query() params: ClientReservationSearchOptions,
+    @User() user?: RequestUser,
+  ) {
+    return this.reservationsService.getReservations({
+      ...params,
+      userId: user.id,
+    });
   }
 
   @Delete('reservations/:id')
