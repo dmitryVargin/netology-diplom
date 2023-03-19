@@ -30,9 +30,12 @@ export class ClientController {
 
   @Post('reservations')
   @Roles('client')
-  addReservation(@Body() data, @Request() req: { user: RequestUser }) {
+  addReservation(
+    @Body() data,
+    @Request() { user: { id } }: { user: RequestUser },
+  ) {
     return this.reservationsService.addReservation({
-      user: req.user.id,
+      user: id,
       ...data,
     });
   }

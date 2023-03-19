@@ -16,6 +16,7 @@ import { Message, MessageDocument } from './schemas/messages.schemas';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { MessageGateway } from './message.gateway';
+import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
 
 @Injectable()
 export class SupportRequestsService implements ISupportRequestService {
@@ -36,8 +37,8 @@ export class SupportRequestsService implements ISupportRequestService {
   }
 
   async findSupportRequests({
-    limit = 100,
-    offset = 0,
+    limit = LIMIT_DEFAULT,
+    offset = OFFSET_DEFAULT,
     isActive,
     user,
   }: GetChatListParams & SearchParams): Promise<SupportRequest[]> {

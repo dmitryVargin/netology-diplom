@@ -1,56 +1,132 @@
-import { Injectable } from '@nestjs/common';
-import { HotelRoomService, SearchRoomsParams } from './hotel-rooms.interface';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  CreateHotelRoomParams,
+  HotelRoomByIdResponse,
+  HotelRoomCreateUpdateResponse,
+  HotelRoomSearchResponse,
+  HotelRoomService,
+  SearchHotelRoomParams,
+  UpdateHotelRoomParams,
+} from './hotel-rooms.interface';
 import { HotelRoom, HotelRoomDocument } from './schemas/hotel-room.schema';
-import { ID } from '../utils/types';
+import { ID, WithId } from '../utils/types';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
+import { Hotel, HotelDocument } from '../hotels/schemas/hotel.schema';
+import { hotelSelection } from '../hotels/hotels.service';
 
 @Injectable()
 export class HotelRoomsService implements HotelRoomService {
   constructor(
     @InjectModel(HotelRoom.name)
     private hotelRoomModel: Model<HotelRoomDocument>,
+    @InjectModel(Hotel.name) private hotelModel: Model<HotelDocument>,
   ) {}
 
-  async create({
-    description,
-    hotel,
-    images,
-    isEnabled,
-  }: { hotel: ID } & Pick<HotelRoom, 'isEnabled'> &
-    Partial<Pick<HotelRoom, 'images' | 'description'>>): Promise<HotelRoom> {
+  async create(
+    params: CreateHotelRoomParams,
+  ): Promise<HotelRoomCreateUpdateResponse> {
     const createdRoom = new this.hotelRoomModel({
-      description,
-      hotel,
-      images,
-      isEnabled,
+      hotel: params.hotelId,
+      description: params.description,
+      images: params.images,
+      isEnabled: true,
     });
-    return await createdRoom.save();
-  }
 
-  async findById(id: ID): Promise<HotelRoom> {
-    return this.hotelRoomModel.findById(id).select('-__v');
+    const {
+      _id,
+      hotel: hotelId,
+      description,
+      images,
+    } = await createdRoom.save();
+
+    const hotel = (await this.hotelModel
+      .findById(hotelId)
+      .select(hotelSelection)
+      .exec()) as WithId<Hotel>;
+
+    return { id: _id, hotel, description, images, isEnabled: true };
   }
 
   async search({
-    limit = 100,
-    offset = 0,
+    limit = LIMIT_DEFAULT,
+    offset = OFFSET_DEFAULT,
     hotel,
     isEnabled,
-  }: SearchRoomsParams): Promise<HotelRoom[]> {
-    return this.hotelRoomModel
+  }: SearchHotelRoomParams): Promise<HotelRoomSearchResponse[]> {
+    const hotelRoom = await this.hotelRoomModel
       .find({
         hotel,
         isEnabled,
       })
       .skip(offset)
-      .limit(limit)
-      .exec();
+      .limit(limit);
+
+    const foundHotel = (await this.hotelModel
+      .findById(hotel)
+      .select({ _id: 0, id: '$_id', title: 1 })) as WithId<
+      Pick<Hotel, 'title'>
+    >;
+
+    return hotelRoom.map((hotelRoom) => ({
+      id: hotelRoom.id,
+      description: hotelRoom.description,
+      images: hotelRoom.images,
+      hotel: foundHotel,
+    }));
   }
 
-  async update(id: ID, data: Partial<HotelRoom>): Promise<HotelRoom> {
-    return this.hotelRoomModel.findOneAndUpdate({ _id: id }, data, {
-      new: true,
-    });
+  async findById(hotelRoomId: ID): Promise<HotelRoomByIdResponse> {
+    try {
+      // TODO откуда тут null вообще
+      const { _id, description, images, hotel } =
+        (await this.hotelRoomModel.findById(hotelRoomId)) as HotelRoomDocument;
+
+      const foundHotel = (await this.hotelModel.findById(hotel).select({
+        _id: 0,
+        id: '$_id',
+        title: 1,
+        description: 1,
+      })) as WithId<Hotel>;
+
+      return { id: _id, description, images, hotel: foundHotel };
+    } catch (e) {
+      throw new NotFoundException();
+    }
+  }
+
+  async update(
+    hotelRoomId: ID,
+    params: UpdateHotelRoomParams,
+  ): Promise<HotelRoomCreateUpdateResponse> {
+    try {
+      const {
+        description,
+        images,
+        isEnabled,
+        hotel: hotelId,
+      } = (await this.hotelRoomModel.findByIdAndUpdate(
+        hotelRoomId,
+        {
+          description: params.description,
+          hotel: params.hotelId,
+          images: params.images,
+          isEnabled: params.isEnabled,
+        },
+        {
+          new: true,
+        },
+      )) as HotelRoomDocument;
+
+      const hotel = (await this.hotelModel
+        .findById(hotelId)
+        .select(hotelSelection)
+        .exec()) as WithId<Hotel>;
+
+      return { id: hotelRoomId, hotel, description, images, isEnabled };
+    } catch (e) {
+      throw new NotFoundException();
+    }
   }
 }

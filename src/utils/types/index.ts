@@ -10,7 +10,7 @@ export type SearchParams = {
 export type Roles = 'admin' | 'client' | 'manager';
 
 export type RequestUser = {
-  id: string;
+  id: ID;
   role: Roles;
 };
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   IHotelService,
   SearchHotelParams,
@@ -12,7 +12,7 @@ import { Model } from 'mongoose';
 import getNonEmptyFields from '../utils/getNonEmptyFields';
 import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
 
-const hotelSelection = {
+export const hotelSelection = {
   _id: 0,
   id: '$_id',
   title: 1,
@@ -31,13 +31,6 @@ export class HotelsService implements IHotelService {
     return { id: _id, title, description };
   }
 
-  findById(hotelId: ID): Promise<WithId<Hotel>> {
-    return this.hotelModel
-      .findById(hotelId)
-      .select(hotelSelection)
-      .exec() as Promise<WithId<Hotel>>;
-  }
-
   search({
     limit = LIMIT_DEFAULT,
     offset = OFFSET_DEFAULT,
@@ -51,22 +44,34 @@ export class HotelsService implements IHotelService {
       .exec() as Promise<WithId<Hotel>[]>;
   }
 
-  // TODO валидация
-  // TODO обработка ошибок
-  update(
+  async findById(hotelId: ID): Promise<WithId<Hotel>> {
+    try {
+      return (await this.hotelModel
+        .findById(hotelId)
+        .select(hotelSelection)) as WithId<Hotel>;
+    } catch (e) {
+      throw new NotFoundException();
+    }
+  }
+
+  async update(
     hotelId: ID,
     { title, description }: UpdateHotelParams,
   ): Promise<WithId<Hotel>> {
-    return this.hotelModel
-      .findByIdAndUpdate(
-        hotelId,
-        {
-          title,
-          description,
-        },
-        { new: true },
-      )
-      .select(hotelSelection)
-      .exec() as Promise<WithId<Hotel>>;
+    try {
+      return (await this.hotelModel
+        .findByIdAndUpdate(
+          hotelId,
+          {
+            title,
+            description,
+          },
+          { new: true },
+        )
+        .select(hotelSelection)
+        .exec()) as WithId<Hotel>;
+    } catch (e) {
+      throw new NotFoundException();
+    }
   }
 }

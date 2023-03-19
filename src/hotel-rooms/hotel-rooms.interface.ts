@@ -1,20 +1,46 @@
-import { ID, SearchParams } from '../utils/types';
+import { ID, SearchParams, WithId } from '../utils/types';
 import { HotelRoom } from './schemas/hotel-room.schema';
+import { Hotel } from '../hotels/schemas/hotel.schema';
 
-export interface SearchRoomsParams extends SearchParams {
+export type SearchHotelRoomParams = SearchParams & {
   hotel: ID;
   isEnabled?: boolean;
-}
+};
+export type CreateHotelRoomParams = {
+  hotelId: ID;
+  description: string;
+  images: string[];
+};
+
+export type UpdateHotelRoomParams = {
+  hotelId: string;
+  description?: string;
+  images?: File[];
+  isEnabled?: boolean;
+};
+export type HotelRoomSearchResponse = Omit<
+  WithId<HotelRoom>,
+  'isEnabled' | 'hotel'
+> & { hotel: WithId<Pick<Hotel, 'title'>> };
+
+export type HotelRoomByIdResponse = Omit<
+  WithId<HotelRoom>,
+  'isEnabled' | 'hotel'
+> & { hotel: WithId<Hotel> };
+
+export type HotelRoomCreateUpdateResponse = Omit<WithId<HotelRoom>, 'hotel'> & {
+  hotel: WithId<Hotel>;
+};
 
 export interface HotelRoomService {
-  create(
-    data: { hotel: ID } & Pick<HotelRoom, 'isEnabled'> &
-      Partial<Pick<HotelRoom, 'images' | 'description'>>,
-  ): Promise<HotelRoom>;
+  create(params: CreateHotelRoomParams): Promise<HotelRoomCreateUpdateResponse>;
 
-  findById(id: ID): Promise<HotelRoom>;
+  findById(hotelRoomId: ID): Promise<HotelRoomByIdResponse>;
 
-  search(params: SearchRoomsParams): Promise<HotelRoom[]>;
+  search(params: SearchHotelRoomParams): Promise<HotelRoomSearchResponse[]>;
 
-  update(id: ID, data: Partial<HotelRoom>): Promise<HotelRoom>;
+  update(
+    hotelRoomId: ID,
+    params: UpdateHotelRoomParams,
+  ): Promise<HotelRoomCreateUpdateResponse>;
 }

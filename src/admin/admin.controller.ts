@@ -21,8 +21,17 @@ import { Roles } from '../auth/role.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { editFileName, imageFileFilter } from '../configs/image.upload.config';
-import { HotelRoom } from '../hotel-rooms/schemas/hotel-room.schema';
-import { UpdateHotelParams } from '../hotels/hotels.interface';
+
+import {
+  CreateHotelParams,
+  SearchHotelParams,
+  UpdateHotelParams,
+} from '../hotels/hotels.interface';
+
+import {
+  CreateHotelRoomParams,
+  UpdateHotelRoomParams,
+} from '../hotel-rooms/hotel-rooms.interface';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -35,18 +44,19 @@ export class AdminController {
 
   @Get('hotels')
   @Roles('admin')
-  getHotels(@Query() params) {
+  getHotels(@Query() params: SearchHotelParams) {
     return this.hotelsService.search(params);
   }
+
   @Get('hotels/:id')
   @Roles('admin')
-  getHotelById(@Param() { id }) {
+  getHotelById(@Param() { id }: { id: ID }) {
     return this.hotelsService.findById(id);
   }
 
   @Post('hotels')
   @Roles('admin')
-  createHotel(@Body() data) {
+  createHotel(@Body() data: CreateHotelParams) {
     return this.hotelsService.create(data);
   }
 
@@ -68,33 +78,27 @@ export class AdminController {
     }),
   )
   createHotelRoom(
-    @UploadedFiles() files,
-    @Body()
-    {
-      description,
-      hotelId,
-    }: Partial<Pick<HotelRoom, 'description'>> & { hotelId: ID },
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() data: CreateHotelRoomParams,
   ) {
     const images = files.map((file) => file.path);
-    const isEnabled = true;
+
     return this.hotelRoomsService.create({
-      description,
-      hotel: hotelId,
+      ...data,
       images,
-      isEnabled,
     });
   }
 
   @Put('hotel-rooms/:id')
   @Roles('admin')
-  updateHotelRoom(@Param('id') id: ID, @Body() data) {
+  updateHotelRoom(@Param('id') id: ID, @Body() data: UpdateHotelRoomParams) {
     return this.hotelRoomsService.update(id, data);
   }
 
   @Roles('admin')
   @Get('users')
-  getUsers(@Query() data) {
-    return this.usersService.findAll(data);
+  getUsers(@Query() params) {
+    return this.usersService.findAll(params);
   }
 
   @Roles('admin')
