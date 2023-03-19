@@ -8,12 +8,13 @@ import {
 import { Reservation, ReservationDocument } from './schemas/reservation.schema';
 import { ID } from '../utils/types';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Hotel, HotelDocument } from '../hotels/schemas/hotel.schema';
 import {
   HotelRoom,
   HotelRoomDocument,
 } from '../hotel-rooms/schemas/hotel-room.schema';
+import getNonEmptyFields from '../utils/getNonEmptyFields';
 
 @Injectable()
 export class ReservationsService implements IReservation {
@@ -62,6 +63,65 @@ export class ReservationsService implements IReservation {
         images,
       },
     };
+  }
+
+  // TODO заменить тип айдишшников на стринги где это надо
+
+  async getReservationsNew(
+    filter: GetReservations,
+  ): Promise<ReservationsResponse[]> {
+    return await this.reservationModel
+      .aggregate([
+        {
+          $project: {
+            hotelId: 1,
+            userId: 1,
+            roomId: 1,
+            dateStart: 1,
+            dateEnd: 1,
+          },
+        },
+        {
+          $match: {
+            userId: new mongoose.Types.ObjectId(filter.userId as string),
+          },
+        },
+        {
+          $lookup: {
+            from: 'hotels',
+            localField: 'hotelId',
+            foreignField: '_id',
+            as: 'hotels',
+          },
+        },
+        { $unwind: '$hotels' },
+        {
+          $lookup: {
+            from: 'hotelrooms',
+            localField: 'roomId',
+            foreignField: '_id',
+            as: 'hotelrooms',
+          },
+        },
+        { $unwind: '$hotelrooms' },
+        {
+          $project: {
+            _id: 0,
+            id: '$_id',
+            startDate: '$dateStart',
+            endDate: '$dateEnd',
+            hotel: {
+              title: '$hotels.title',
+              description: '$hotels.description',
+            },
+            hotelRoom: {
+              images: '$hotelrooms.images',
+              description: '$hotelrooms.description',
+            },
+          },
+        },
+      ])
+      .exec();
   }
 
   async getReservations(

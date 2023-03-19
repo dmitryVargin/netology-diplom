@@ -20,7 +20,6 @@ import { Roles } from '../auth/role.decorator';
 import { CreateSupportRequestDto } from '../support-requests/support-requests.interface';
 import {
   AddClientReservation,
-  AddReservationParams,
   ClientReservationSearchOptions,
 } from '../reservations/reservations.interface';
 
@@ -54,7 +53,7 @@ export class ClientController {
     @Query() params: ClientReservationSearchOptions,
     @User() user?: RequestUser,
   ) {
-    return this.reservationsService.getReservations({
+    return this.reservationsService.getReservationsNew({
       ...params,
       userId: user.id,
     });

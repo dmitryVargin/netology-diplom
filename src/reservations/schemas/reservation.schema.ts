@@ -21,3 +21,5 @@ export class Reservation {
 }
 
 export const ReservationSchema = SchemaFactory.createForClass(Reservation);
+
+console.log('ReservationSchema', ReservationSchema);
