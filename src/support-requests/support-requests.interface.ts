@@ -1,27 +1,27 @@
-import { ID } from '../utils/types';
+import { ID, SearchParams } from '../utils/types';
 import { SupportRequest } from './schemas/support-requests.schemas';
 import { Message } from './schemas/messages.schemas';
 
-export interface CreateSupportRequestDto {
+export type CreateSupportRequestDto = {
   user: ID;
   text: string;
-}
+};
 
-export interface SendMessageDto {
+export type SendMessageDto = {
   author: ID;
   supportRequest: ID;
   text: string;
-}
-export interface MarkMessagesAsReadDto {
+};
+export type MarkMessagesAsReadDto = {
   user: ID;
   supportRequest: ID;
   createdBefore: Date;
-}
+};
 
-export interface GetChatListParams {
+export type GetChatListParams = SearchParams & {
   user: ID | null;
   isActive: boolean;
-}
+};
 
 export type CreateSupportRequestResponse = {
   id: string;
@@ -41,12 +41,12 @@ export interface ISupportRequestClientService {
   createSupportRequest(
     data: CreateSupportRequestDto,
   ): Promise<CreateSupportRequestResponse>;
-  markMessagesAsRead(params: MarkMessagesAsReadDto);
+  markMessagesAsRead(params: MarkMessagesAsReadDto): Promise<{ success: true }>;
   getUnreadCount(supportRequest: ID): Promise<number>;
 }
 
 export interface ISupportRequestEmployeeService {
-  markMessagesAsRead(params: MarkMessagesAsReadDto);
+  markMessagesAsRead(params: MarkMessagesAsReadDto): Promise<{ success: true }>;
   getUnreadCount(supportRequest: ID): Promise<number>;
   closeRequest(supportRequest: ID): Promise<void>;
 }

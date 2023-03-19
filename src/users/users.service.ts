@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { IUserService, SearchUserParams } from './users.interface';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -12,7 +12,7 @@ export class UsersService implements IUserService {
   async create({ passwordHash, ...data }: Partial<User>): Promise<User> {
     const salt = genSaltSync(10);
     const user = new this.UserModel({
-      passwordHash: hashSync(passwordHash, salt),
+      passwordHash: hashSync(passwordHash as string, salt),
       ...data,
     });
     try {
@@ -36,10 +36,20 @@ export class UsersService implements IUserService {
   }
 
   async findByEmail(email: SearchUserParams['email']): Promise<User> {
-    return this.UserModel.findOne({ email }).select('-__v').exec();
+    try {
+      return (await this.UserModel.findOne({ email })
+        .select('-__v')
+        .exec()) as UserDocument;
+    } catch (e) {
+      throw new NotFoundException();
+    }
   }
 
   async findById(id: ID): Promise<User> {
-    return this.UserModel.findById(id).select('-__v');
+    try {
+      return (await this.UserModel.findById(id).select('-__v')) as UserDocument;
+    } catch (e) {
+      throw new NotFoundException();
+    }
   }
 }

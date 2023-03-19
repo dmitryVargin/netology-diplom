@@ -41,7 +41,7 @@ export class SupportRequestsService implements ISupportRequestService {
     offset = OFFSET_DEFAULT,
     isActive,
     user,
-  }: GetChatListParams & SearchParams): Promise<SupportRequest[]> {
+  }: GetChatListParams): Promise<SupportRequest[]> {
     return await this.supportRequestModel
       .find({ user: user, isActive })
       .skip(offset)
@@ -54,9 +54,9 @@ export class SupportRequestsService implements ISupportRequestService {
   }
 
   async getMessages(supportRequestId: ID): Promise<Message[]> {
-    const supportRequestModel = await this.supportRequestModel.findById(
+    const supportRequestModel = (await this.supportRequestModel.findById(
       supportRequestId,
-    );
+    )) as SupportRequestDocument;
 
     return this.messageModel.find({
       _id: supportRequestModel.messages,
@@ -68,9 +68,9 @@ export class SupportRequestsService implements ISupportRequestService {
     author,
     supportRequest,
   }: SendMessageDto): Promise<any> {
-    const supportRequestModel = await this.supportRequestModel.findById(
+    const supportRequestModel = (await this.supportRequestModel.findById(
       supportRequest,
-    );
+    )) as SupportRequestDocument;
     const message = new this.messageModel({
       author,
       text,

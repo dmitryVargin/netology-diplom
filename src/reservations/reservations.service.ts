@@ -14,7 +14,6 @@ import {
   HotelRoom,
   HotelRoomDocument,
 } from '../hotel-rooms/schemas/hotel-room.schema';
-import getNonEmptyFields from '../utils/getNonEmptyFields';
 
 @Injectable()
 export class ReservationsService implements IReservation {
@@ -36,13 +35,13 @@ export class ReservationsService implements IReservation {
       description,
       images,
       hotel: hotelId,
-    } = await this.hotelRoomModel.findById(hotelRoom);
+    } = (await this.hotelRoomModel.findById(hotelRoom)) as HotelRoomDocument;
 
-    const hotel = await this.hotelModel.findById(hotelId, {
+    const hotel = (await this.hotelModel.findById(hotelId, {
       _id: 0,
       title: 1,
       description: 1,
-    });
+    })) as Omit<HotelDocument, '_id'>;
 
     const reservation = new this.reservationModel({
       userId,
@@ -150,10 +149,10 @@ export class ReservationsService implements IReservation {
     return reservations.map(({ dateStart, dateEnd, hotelId, roomId, _id }) => {
       const currentHotel = hotels.find((hotel) => {
         return hotel._id.equals(hotelId);
-      });
+      }) as HotelDocument;
       const currentHotelRoom = hotelRooms.find((hotelRoom) =>
         hotelRoom._id.equals(roomId),
-      );
+      ) as HotelRoomDocument;
       return {
         id: _id,
         startDate: dateStart,

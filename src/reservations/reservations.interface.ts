@@ -1,8 +1,5 @@
 import { ID } from '../utils/types';
-import { Reservation } from './schemas/reservation.schema';
-import { Prop } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
-import { User } from '../users/schemas/user.schema';
+
 import { Hotel } from '../hotels/schemas/hotel.schema';
 import { HotelRoom } from '../hotel-rooms/schemas/hotel-room.schema';
 

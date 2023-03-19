@@ -12,12 +12,15 @@ import {
 
 import { ReservationsService } from '../reservations/reservations.service';
 import { SupportRequestsService } from '../support-requests/support-requests.service';
-import { ID, RequestUser } from '../utils/types';
+import { RequestUser } from '../utils/types';
 import { SupportRequestsClientService } from '../support-requests/support-request-client.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/role.guard';
 import { Roles } from '../auth/role.decorator';
-import { CreateSupportRequestDto } from '../support-requests/support-requests.interface';
+import {
+  CreateSupportRequestDto,
+  GetChatListParams,
+} from '../support-requests/support-requests.interface';
 import {
   AddClientReservation,
   ClientReservationSearchOptions,
@@ -38,7 +41,7 @@ export class ClientController {
   @Roles('client')
   addReservation(
     @Body() data: AddClientReservation,
-    @User() user?: RequestUser,
+    @User() user: RequestUser,
   ) {
     return this.reservationsService.addReservation({
       userId: user.id,
@@ -51,7 +54,7 @@ export class ClientController {
   @Roles('client')
   getReservations(
     @Query() params: ClientReservationSearchOptions,
-    @User() user?: RequestUser,
+    @User() user: RequestUser,
   ) {
     return this.reservationsService.getReservationsNew({
       ...params,
@@ -61,7 +64,7 @@ export class ClientController {
 
   @Delete('reservations/:id')
   @Roles('client')
-  removeReservation(@Param('id') id: ID) {
+  removeReservation(@Param('id') id: string) {
     return this.reservationsService.removeReservation(id);
   }
 
@@ -80,8 +83,10 @@ export class ClientController {
 
   @Get('support-request')
   @Roles('client')
-  getSupportRequest(@Query() data, @Request() req: { user: RequestUser }) {
-    const { user } = req;
+  getSupportRequest(
+    @Query() data: Omit<GetChatListParams, 'user'>,
+    @User() user: RequestUser,
+  ) {
     return this.supportRequestsService.findSupportRequests({
       user: user.id,
       ...data,

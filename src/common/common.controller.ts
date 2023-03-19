@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { HotelRoomsService } from '../hotel-rooms/hotel-rooms.service';
-import { ID, RequestUser } from '../utils/types';
+import { RequestUser } from '../utils/types';
 import { SupportRequestsClientService } from '../support-requests/support-request-client.service';
 import { SupportRequestsService } from '../support-requests/support-requests.service';
 
@@ -45,20 +45,20 @@ export class CommonController {
   }
 
   @Get('hotel-rooms/:id')
-  getHotelRoomById(@Param('id') hotelRoomId: ID) {
+  getHotelRoomById(@Param('id') hotelRoomId: string) {
     return this.hotelRoomsService.findById(hotelRoomId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('support-requests/:id/messages')
   @Roles('client', 'manager')
-  async getSupportRequestMessagesById(@Param('id') id) {
+  async getSupportRequestMessagesById(@Param('id') id: string) {
     return this.supportRequestsService.getMessages(id);
   }
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('support-requests/:id/messages/unread_count')
   @Roles('client', 'manager')
-  async getMessagesUnreadCount(@Param('id') id) {
+  async getMessagesUnreadCount(@Param('id') id: string) {
     return this.supportRequestsClientService.getUnreadCount(id);
   }
 
@@ -68,11 +68,11 @@ export class CommonController {
   sendSupportRequestMessageById(
     @Body() { text }: Pick<SendMessageDto, 'text'>,
     @Request() { user }: { user: RequestUser },
-    @Param() { id },
+    @Param('id') supportRequestId: string,
   ) {
     return this.supportRequestsService.sendMessage({
       author: user.id,
-      supportRequest: id,
+      supportRequest: supportRequestId,
       text,
     });
   }
@@ -81,12 +81,14 @@ export class CommonController {
   @Post('support-requests/:id/messages/read')
   @Roles('client', 'manager')
   async messagesRead(
-    @Body() { createdBefore }: { createdBefore: string },
-    @Param() { id: supportRequestId },
+    @Body() { createdBefore }: { createdBefore: Date },
+    @Param('id') supportRequestId: string,
+    @User() user: RequestUser,
   ) {
     return await this.supportRequestsClientService.markMessagesAsRead({
       supportRequest: supportRequestId,
       createdBefore,
+      user: user.id,
     });
   }
 }

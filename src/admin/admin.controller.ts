@@ -32,6 +32,8 @@ import {
   CreateHotelRoomParams,
   UpdateHotelRoomParams,
 } from '../hotel-rooms/hotel-rooms.interface';
+import { SearchUserParams } from '../users/users.interface';
+import { User } from '../users/schemas/user.schema';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin')
@@ -62,7 +64,7 @@ export class AdminController {
 
   @Put('hotels/:id')
   @Roles('admin')
-  updateHotel(@Param('id') hotelId: ID, @Body() data: UpdateHotelParams) {
+  updateHotel(@Param('id') hotelId: string, @Body() data: UpdateHotelParams) {
     return this.hotelsService.update(hotelId, data);
   }
 
@@ -91,19 +93,22 @@ export class AdminController {
 
   @Put('hotel-rooms/:id')
   @Roles('admin')
-  updateHotelRoom(@Param('id') id: ID, @Body() data: UpdateHotelRoomParams) {
+  updateHotelRoom(
+    @Param('id') id: string,
+    @Body() data: UpdateHotelRoomParams,
+  ) {
     return this.hotelRoomsService.update(id, data);
   }
 
   @Roles('admin')
   @Get('users')
-  getUsers(@Query() params) {
+  getUsers(@Query() params: SearchUserParams) {
     return this.usersService.findAll(params);
   }
 
   @Roles('admin')
   @Post('users')
-  createUser(@Body() data) {
+  createUser(@Body() data: Partial<User>) {
     return this.usersService.create(data);
   }
 }

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ISupportRequestEmployeeService } from './support-requests.interface';
+import {
+  ISupportRequestEmployeeService,
+  MarkMessagesAsReadDto,
+} from './support-requests.interface';
 import { ID } from '../utils/types';
 import { Message, MessageDocument } from './schemas/messages.schemas';
 import { InjectModel } from '@nestjs/mongoose';
@@ -37,16 +40,21 @@ export class SupportRequestsEmployeeService
     return supportRequest.length;
   }
 
-  async markMessagesAsRead({ supportRequest, createdBefore }) {
-    const answer = await this.supportRequestModel
+  async markMessagesAsRead({
+    supportRequest,
+    createdBefore,
+    user,
+  }: MarkMessagesAsReadDto) {
+    const answer = (await this.supportRequestModel
       .findOne({
         _id: supportRequest,
       })
-      .exec();
+      .exec()) as SupportRequestDocument;
 
     await this.messageModel.updateMany(
       {
         _id: { $in: answer.messages },
+        author: user,
         sentAt: {
           $lt: createdBefore,
         },
@@ -57,6 +65,6 @@ export class SupportRequestsEmployeeService
 
     return {
       success: true,
-    };
+    } as const;
   }
 }

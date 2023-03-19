@@ -3,6 +3,7 @@ import {
   CreateSupportRequestDto,
   CreateSupportRequestResponse,
   ISupportRequestClientService,
+  MarkMessagesAsReadDto,
 } from './support-requests.interface';
 import {
   SupportRequest,
@@ -51,26 +52,32 @@ export class SupportRequestsClientService
   }
 
   async getUnreadCount(supportRequestId: ID): Promise<number> {
-    const supportRequest = await this.supportRequestModel.findById(
+    const supportRequest = (await this.supportRequestModel.findById(
       supportRequestId,
-    );
-    const messages = await this.messageModel.find({
+    )) as SupportRequestDocument;
+
+    const messages = (await this.messageModel.find({
       _id: supportRequest.messages,
-    });
+    })) as MessageDocument[];
 
     return messages.filter((message) => message?.readAt === undefined).length;
   }
 
-  async markMessagesAsRead({ supportRequest, createdBefore }) {
-    const answer = await this.supportRequestModel
+  async markMessagesAsRead({
+    supportRequest,
+    createdBefore,
+    user,
+  }: MarkMessagesAsReadDto) {
+    const answer = (await this.supportRequestModel
       .findOne({
         _id: supportRequest,
       })
-      .exec();
+      .exec()) as SupportRequestDocument;
 
     await this.messageModel.updateMany(
       {
         _id: { $in: answer.messages },
+        author: user,
         sentAt: {
           $lt: createdBefore,
         },
@@ -81,6 +88,6 @@ export class SupportRequestsClientService
 
     return {
       success: true,
-    };
+    } as const;
   }
 }

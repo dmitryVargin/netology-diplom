@@ -20,7 +20,7 @@ const options = {
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_CONNECTION, options),
+    MongooseModule.forRoot(process.env.MONGO_CONNECTION as string, options),
     AdminModule,
     CommonModule,
     ClientModule,

@@ -7,13 +7,14 @@ export type UserDocument = User & Document;
 export class User {
   @Prop({
     validate: {
-      validator: async function (email) {
+      validator: async function (email: string): Promise<boolean> {
         const user = await this.constructor.findOne({ email });
         if (user) {
           return this.id === user.id;
         }
         return true;
       },
+
       message: () => 'Указанный email адрес уже используется.',
     },
     required: [true, 'Поле "email" обязательно к заполнению'],
