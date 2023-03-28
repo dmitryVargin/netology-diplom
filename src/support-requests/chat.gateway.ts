@@ -8,10 +8,12 @@ import {
 import { Socket } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
 import { SupportRequestsService } from './support-requests.service';
+import { NotFoundException } from '@nestjs/common';
+import { Server } from 'https';
 
 @WebSocketGateway()
 export class ChatGateway {
-  @WebSocketServer() server;
+  @WebSocketServer() server: Server;
   constructor(private readonly supportRequestService: SupportRequestsService) {}
 
   @SubscribeMessage('subscribeToChat')
@@ -33,6 +35,9 @@ export class ChatGateway {
     const supportRequest = await this.supportRequestService.findSupportRequest(
       chatId,
     );
+    if (!supportRequest) {
+      throw new NotFoundException();
+    }
 
     if (role === 'client' && supportRequest.user !== id) {
       return;

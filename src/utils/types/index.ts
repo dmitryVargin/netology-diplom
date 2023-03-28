@@ -1,7 +1,3 @@
-import { ObjectId } from 'mongoose';
-
-export type ID = string | ObjectId;
-
 export type SearchParams = {
   limit?: number;
   offset?: number;
@@ -10,8 +6,8 @@ export type SearchParams = {
 export type Roles = 'admin' | 'client' | 'manager';
 
 export type RequestUser = {
-  id: ID;
+  id: string;
   role: Roles;
 };
 
-export type WithId<T> = T & { id: ID };
+export type WithId<T> = T & { id: string };

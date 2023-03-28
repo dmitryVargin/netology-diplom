@@ -1,25 +1,25 @@
-import { ID, SearchParams } from '../utils/types';
+import { SearchParams } from '../utils/types';
 import { SupportRequest } from './schemas/support-requests.schemas';
 import { Message } from './schemas/messages.schemas';
 
 export type CreateSupportRequestDto = {
-  user: ID;
+  user: string;
   text: string;
 };
 
 export type SendMessageDto = {
-  author: ID;
-  supportRequest: ID;
+  author: string;
+  supportRequest: string;
   text: string;
 };
 export type MarkMessagesAsReadDto = {
-  user: ID;
-  supportRequest: ID;
+  user: string;
+  supportRequest: string;
   createdBefore: Date;
 };
 
 export type GetChatListParams = SearchParams & {
-  user: ID | null;
+  user: string | null;
   isActive: boolean;
 };
 
@@ -33,8 +33,8 @@ export type CreateSupportRequestResponse = {
 export interface ISupportRequestService {
   findSupportRequests(params: GetChatListParams): Promise<SupportRequest[]>;
   sendMessage(data: SendMessageDto): Promise<Message>;
-  getMessages(supportRequest: ID): Promise<Message[]>;
-  subscribe(handler: (supportRequest: ID, message: Message) => void): void;
+  getMessages(supportRequest: string): Promise<Message[]>;
+  subscribe(handler: (supportRequest: string, message: Message) => void): void;
 }
 
 export interface ISupportRequestClientService {
@@ -42,11 +42,11 @@ export interface ISupportRequestClientService {
     data: CreateSupportRequestDto,
   ): Promise<CreateSupportRequestResponse>;
   markMessagesAsRead(params: MarkMessagesAsReadDto): Promise<{ success: true }>;
-  getUnreadCount(supportRequest: ID): Promise<number>;
+  getUnreadCount(supportRequest: string): Promise<number>;
 }
 
 export interface ISupportRequestEmployeeService {
   markMessagesAsRead(params: MarkMessagesAsReadDto): Promise<{ success: true }>;
-  getUnreadCount(supportRequest: ID): Promise<number>;
-  closeRequest(supportRequest: ID): Promise<void>;
+  getUnreadCount(supportRequest: string): Promise<number>;
+  closeRequest(supportRequest: string): Promise<void>;
 }

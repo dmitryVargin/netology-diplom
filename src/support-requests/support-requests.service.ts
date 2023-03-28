@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   GetChatListParams,
   ISupportRequestService,
@@ -8,7 +8,6 @@ import {
   SupportRequest,
   SupportRequestDocument,
 } from './schemas/support-requests.schemas';
-import { ID, SearchParams } from '../utils/types';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message, MessageDocument } from './schemas/messages.schemas';
@@ -28,7 +27,7 @@ export class SupportRequestsService implements ISupportRequestService {
     private eventEmitter: EventEmitter2,
     private messageGateway: MessageGateway,
   ) {
-    this.subscribe(async (supportRequest: ID, message: Message) => {
+    this.subscribe(async (supportRequest: string, message: Message) => {
       this.messageGateway.server.emit('message', {
         chatId: supportRequest,
         message,
@@ -46,21 +45,27 @@ export class SupportRequestsService implements ISupportRequestService {
       .find({ user: user, isActive })
       .skip(offset)
       .limit(limit)
-      .select('-__v')
       .exec();
   }
-  async findSupportRequest(supportRequestId: ID) {
+  async findSupportRequest(supportRequestId: string) {
     return this.supportRequestModel.findById(supportRequestId);
   }
 
-  async getMessages(supportRequestId: ID): Promise<Message[]> {
-    const supportRequestModel = (await this.supportRequestModel.findById(
+  async getMessages(supportRequestId: string): Promise<Message[]> {
+    const supportRequestModel = await this.supportRequestModel.findById(
       supportRequestId,
-    )) as SupportRequestDocument;
+    );
+    if (!supportRequestModel) {
+      throw new NotFoundException();
+    }
 
-    return this.messageModel.find({
+    const found = this.messageModel.find({
       _id: supportRequestModel.messages,
     });
+    if (!found) {
+      throw new NotFoundException();
+    }
+    return found;
   }
 
   async sendMessage({
@@ -68,14 +73,18 @@ export class SupportRequestsService implements ISupportRequestService {
     author,
     supportRequest,
   }: SendMessageDto): Promise<any> {
-    const supportRequestModel = (await this.supportRequestModel.findById(
+    const supportRequestModel = await this.supportRequestModel.findById(
       supportRequest,
-    )) as SupportRequestDocument;
+    );
     const message = new this.messageModel({
       author,
       text,
       sentAt: new Date(),
     });
+
+    if (!supportRequestModel) {
+      throw new NotFoundException();
+    }
     await message.save();
     supportRequestModel.messages.push(message);
     await supportRequestModel.save();
@@ -83,7 +92,7 @@ export class SupportRequestsService implements ISupportRequestService {
     return message;
   }
 
-  subscribe(handler: (supportRequest: ID, message: Message) => void) {
+  subscribe(handler: (supportRequest: string, message: Message) => void) {
     this.eventEmitter.on('message', handler);
   }
 }

@@ -1,4 +1,3 @@
-import { ID } from '../utils/types';
 import { User } from './schemas/user.schema';
 
 export interface SearchUserParams {
@@ -10,7 +9,7 @@ export interface SearchUserParams {
 }
 export interface IUserService {
   create(data: Partial<User>): Promise<User>;
-  findById(id: ID): Promise<User>;
+  findById(id: string): Promise<User>;
   findByEmail(email: string): Promise<User>;
   findAll(params: SearchUserParams): Promise<User[]>;
 }

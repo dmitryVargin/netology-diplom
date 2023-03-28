@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   CreateSupportRequestDto,
   CreateSupportRequestResponse,
@@ -9,7 +9,6 @@ import {
   SupportRequest,
   SupportRequestDocument,
 } from './schemas/support-requests.schemas';
-import { ID } from '../utils/types';
 import { Message, MessageDocument } from './schemas/messages.schemas';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -51,14 +50,16 @@ export class SupportRequestsClientService
     };
   }
 
-  async getUnreadCount(supportRequestId: ID): Promise<number> {
-    const supportRequest = (await this.supportRequestModel.findById(
+  async getUnreadCount(supportRequestId: string): Promise<number> {
+    const supportRequest = await this.supportRequestModel.findById(
       supportRequestId,
-    )) as SupportRequestDocument;
-
-    const messages = (await this.messageModel.find({
+    );
+    if (!supportRequest) {
+      throw new NotFoundException();
+    }
+    const messages = await this.messageModel.find({
       _id: supportRequest.messages,
-    })) as MessageDocument[];
+    });
 
     return messages.filter((message) => message?.readAt === undefined).length;
   }
@@ -68,11 +69,15 @@ export class SupportRequestsClientService
     createdBefore,
     user,
   }: MarkMessagesAsReadDto) {
-    const answer = (await this.supportRequestModel
+    const answer = await this.supportRequestModel
       .findOne({
         _id: supportRequest,
       })
-      .exec()) as SupportRequestDocument;
+      .exec();
+
+    if (!answer) {
+      throw new NotFoundException();
+    }
 
     await this.messageModel.updateMany(
       {

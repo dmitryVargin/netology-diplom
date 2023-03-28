@@ -3,10 +3,11 @@ import mongoose, { Document } from 'mongoose';
 import { Hotel } from '../../hotels/schemas/hotel.schema';
 import { User } from '../../users/schemas/user.schema';
 import { HotelRoom } from '../../hotel-rooms/schemas/hotel-room.schema';
+import { SchemeBaseOptions } from '../../utils/constants';
 
 export type ReservationDocument = Reservation & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, ...SchemeBaseOptions })
 export class Reservation {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   userId: User;

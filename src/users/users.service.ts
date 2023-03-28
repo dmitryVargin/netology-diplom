@@ -3,7 +3,6 @@ import { IUserService, SearchUserParams } from './users.interface';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ID } from '../utils/types';
 import { genSaltSync, hashSync } from 'bcryptjs';
 
 @Injectable()
@@ -15,12 +14,12 @@ export class UsersService implements IUserService {
       passwordHash: hashSync(passwordHash as string, salt),
       ...data,
     });
-    try {
-      const res = await user.save();
-      return res;
-    } catch (e) {
-      return e.message;
+
+    const res = await user.save();
+    if (res) {
+      throw new NotFoundException();
     }
+    return res;
   }
 
   async findAll({
@@ -28,28 +27,22 @@ export class UsersService implements IUserService {
     offset,
     ...filters
   }: SearchUserParams): Promise<User[]> {
-    return this.UserModel.find(filters)
-      .limit(limit)
-      .skip(offset)
-      .select('-__v')
-      .exec();
+    return this.UserModel.find(filters).limit(limit).skip(offset).exec();
   }
 
   async findByEmail(email: SearchUserParams['email']): Promise<User> {
-    try {
-      return (await this.UserModel.findOne({ email })
-        .select('-__v')
-        .exec()) as UserDocument;
-    } catch (e) {
+    const user = await this.UserModel.findOne({ email }).exec();
+    if (!user) {
       throw new NotFoundException();
     }
+    return user;
   }
 
-  async findById(id: ID): Promise<User> {
-    try {
-      return (await this.UserModel.findById(id).select('-__v')) as UserDocument;
-    } catch (e) {
+  async findById(id: string): Promise<User> {
+    const user = await this.UserModel.findById(id);
+    if (!user) {
       throw new NotFoundException();
     }
+    return user;
   }
 }

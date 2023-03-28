@@ -1,10 +1,8 @@
-import { ID } from '../utils/types';
-
 import { Hotel } from '../hotels/schemas/hotel.schema';
 import { HotelRoom } from '../hotel-rooms/schemas/hotel-room.schema';
 
 export type ManagerReservationSearchOptions = {
-  userId: ID;
+  userId: string;
   dateStart?: Date;
   dateEnd?: Date;
 };
@@ -13,7 +11,7 @@ export type ClientReservationSearchOptions = {
   dateEnd?: Date;
 };
 export type GetReservations = {
-  userId: ID;
+  userId: string;
   dateStart?: Date;
   dateEnd?: Date;
 };
@@ -26,18 +24,18 @@ export type ReservationsResponse = {
 };
 
 export type AddClientReservation = {
-  hotelRoom: ID;
+  hotelRoom: string;
   dateStart: Date;
   dateEnd: Date;
 };
 export type AddReservationParams = {
-  userId: ID;
-  hotelRoom: ID;
+  userId: string;
+  hotelRoom: string;
   startDate: Date;
   endDate: Date;
 };
 export interface IReservation {
   addReservation(data: AddReservationParams): Promise<ReservationsResponse>;
-  removeReservation(reservationId: ID): Promise<void>;
+  removeReservation(reservationId: string): Promise<void>;
   getReservations(filter: GetReservations): Promise<ReservationsResponse[]>;
 }

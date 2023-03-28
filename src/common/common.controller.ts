@@ -5,7 +5,6 @@ import {
   Param,
   Post,
   Query,
-  Request,
   UseGuards,
 } from '@nestjs/common';
 import { HotelRoomsService } from '../hotel-rooms/hotel-rooms.service';
@@ -67,7 +66,7 @@ export class CommonController {
   @Roles('client', 'manager')
   sendSupportRequestMessageById(
     @Body() { text }: Pick<SendMessageDto, 'text'>,
-    @Request() { user }: { user: RequestUser },
+    @User() user: RequestUser,
     @Param('id') supportRequestId: string,
   ) {
     return this.supportRequestsService.sendMessage({

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class UIdService {
   constructor(private readonly jwtService: JwtService) {}
-  getUser(auth) {
+  getUser(auth: string) {
     if (!auth) {
       throw new HttpException(
         {
@@ -15,12 +15,12 @@ export class UIdService {
       );
     }
     const jwt = auth.replace('Bearer ', '');
-    const payload = this.jwtService.decode(jwt, { json: true }) as {
+
+    return this.jwtService.decode(jwt, { json: true }) as {
       email: string;
       name: string;
       role: string;
       id: string;
     };
-    return payload;
   }
 }

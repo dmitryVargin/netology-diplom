@@ -6,10 +6,11 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+import { Server } from 'https';
 
 @WebSocketGateway()
 export class MessageGateway {
-  @WebSocketServer() server;
+  @WebSocketServer() server: Server;
 
   @SubscribeMessage('sendMessage')
   async handleMessage(

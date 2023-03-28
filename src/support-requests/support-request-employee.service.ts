@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   ISupportRequestEmployeeService,
   MarkMessagesAsReadDto,
 } from './support-requests.interface';
-import { ID } from '../utils/types';
 import { Message, MessageDocument } from './schemas/messages.schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -22,20 +21,22 @@ export class SupportRequestsEmployeeService
     @InjectModel(Message.name)
     private messageModel: Model<MessageDocument>,
   ) {}
-  async closeRequest(supportRequestId: ID): Promise<void> {
-    this.supportRequestModel.findOneAndUpdate(
+  async closeRequest(supportRequestId: string): Promise<void> {
+    const updated = this.supportRequestModel.findOneAndUpdate(
       { _id: supportRequestId },
       { isActive: false },
     );
+    if (!updated) {
+      throw new NotFoundException();
+    }
   }
 
-  async getUnreadCount(supportRequestId: ID): Promise<number> {
+  async getUnreadCount(supportRequestId: string): Promise<number> {
     const supportRequest = await this.supportRequestModel
       .find({
         _id: supportRequestId,
         messages: [{ $match: { readAt: { $exists: false } } }],
       })
-      .select('-__v')
       .exec();
     return supportRequest.length;
   }
@@ -45,11 +46,15 @@ export class SupportRequestsEmployeeService
     createdBefore,
     user,
   }: MarkMessagesAsReadDto) {
-    const answer = (await this.supportRequestModel
+    const answer = await this.supportRequestModel
       .findOne({
         _id: supportRequest,
       })
-      .exec()) as SupportRequestDocument;
+      .exec();
+
+    if (!answer) {
+      throw new NotFoundException();
+    }
 
     await this.messageModel.updateMany(
       {

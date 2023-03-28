@@ -13,7 +13,6 @@ import {
 import { diskStorage } from 'multer';
 import { HotelsService } from '../hotels/hotels.service';
 import { HotelRoomsService } from '../hotel-rooms/hotel-rooms.service';
-import { ID } from '../utils/types';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/role.guard';
@@ -52,7 +51,7 @@ export class AdminController {
 
   @Get('hotels/:id')
   @Roles('admin')
-  getHotelById(@Param() { id }: { id: ID }) {
+  getHotelById(@Param() { id }: { id: string }) {
     return this.hotelsService.findById(id);
   }
 

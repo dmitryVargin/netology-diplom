@@ -2,10 +2,11 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 
 import { User } from '../../users/schemas/user.schema';
+import { SchemeBaseOptions } from '../../utils/constants';
 
 export type MessageDocument = Message & Document;
 
-@Schema()
+@Schema({ ...SchemeBaseOptions })
 export class Message {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
   author: User;

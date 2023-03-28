@@ -5,7 +5,7 @@ import {
   CreateHotelParams,
   UpdateHotelParams,
 } from './hotels.interface';
-import { ID, WithId } from '../utils/types';
+import { WithId } from '../utils/types';
 import { Hotel, HotelDocument } from './schemas/hotel.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -13,8 +13,6 @@ import getNonEmptyFields from '../utils/getNonEmptyFields';
 import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
 
 export const hotelProjection = {
-  _id: 0,
-  id: '$_id',
   title: 1,
   description: 1,
 } as const;
@@ -27,50 +25,53 @@ export class HotelsService implements IHotelService {
 
   async create(params: CreateHotelParams): Promise<WithId<Hotel>> {
     const hotel = new this.hotelModel(params);
-    const { _id, title, description } = await hotel.save();
-    return { id: _id, title, description };
+    const { id, title, description } = await hotel.save();
+    return { id, title, description };
   }
 
+  // TODO все bad request по сути должны отлавливаться на этапе валидации
   search({
     limit = LIMIT_DEFAULT,
     offset = OFFSET_DEFAULT,
     title,
   }: SearchHotelParams): Promise<WithId<Hotel>[]> {
     return this.hotelModel
-      .find(getNonEmptyFields({ title }), hotelProjection)
+      .find<WithId<Hotel>>(getNonEmptyFields({ title }), hotelProjection)
       .skip(offset)
       .limit(limit)
-      .exec() as Promise<WithId<Hotel>[]>;
+      .exec();
   }
 
-  async findById(hotelId: ID): Promise<WithId<Hotel>> {
-    try {
-      return (await this.hotelModel.findById(
-        hotelId,
-        hotelProjection,
-      )) as WithId<Hotel>;
-    } catch (e) {
+  async findById(hotelId: string): Promise<WithId<Hotel>> {
+    const hotel = await this.hotelModel.findById<WithId<Hotel>>(
+      hotelId,
+      hotelProjection,
+    );
+
+    if (!hotel) {
       throw new NotFoundException();
     }
+    return hotel;
   }
 
   async update(
-    hotelId: ID,
+    hotelId: string,
     { title, description }: UpdateHotelParams,
   ): Promise<WithId<Hotel>> {
-    try {
-      return (await this.hotelModel
-        .findByIdAndUpdate(
-          hotelId,
-          {
-            title,
-            description,
-          },
-          { new: true, select: hotelProjection },
-        )
-        .exec()) as WithId<Hotel>;
-    } catch (e) {
+    const updatedHotel = await this.hotelModel
+      .findByIdAndUpdate<WithId<Hotel>>(
+        hotelId,
+        {
+          title,
+          description,
+        },
+        { new: true, select: hotelProjection },
+      )
+      .exec();
+
+    if (!updatedHotel) {
       throw new NotFoundException();
     }
+    return updatedHotel;
   }
 }

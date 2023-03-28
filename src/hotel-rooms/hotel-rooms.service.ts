@@ -9,7 +9,7 @@ import {
   UpdateHotelRoomParams,
 } from './hotel-rooms.interface';
 import { HotelRoom, HotelRoomDocument } from './schemas/hotel-room.schema';
-import { ID, WithId } from '../utils/types';
+import { WithId } from '../utils/types';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
@@ -34,18 +34,17 @@ export class HotelRoomsService implements HotelRoomService {
       isEnabled: true,
     });
 
-    const {
-      _id,
-      hotel: hotelId,
-      description,
-      images,
-    } = await createdRoom.save();
+    const hotel = await this.hotelModel
+      .findById<WithId<Hotel>>(params.hotelId, hotelProjection)
+      .exec();
 
-    const hotel = (await this.hotelModel
-      .findById(hotelId, hotelProjection)
-      .exec()) as WithId<Hotel>;
+    if (!hotel) {
+      throw new NotFoundException();
+    }
 
-    return { id: _id, hotel, description, images, isEnabled: true };
+    const { id, description, images } = await createdRoom.save();
+
+    return { id, hotel, description, images, isEnabled: true };
   }
 
   async search({
@@ -55,19 +54,22 @@ export class HotelRoomsService implements HotelRoomService {
     isEnabled,
   }: SearchHotelRoomParams): Promise<HotelRoomSearchResponse[]> {
     const hotelRoom = await this.hotelRoomModel
-      .find({
+      .find<WithId<HotelRoom>>({
         hotel,
         isEnabled,
       })
       .skip(offset)
       .limit(limit);
 
-    const foundHotel = (await this.hotelModel.findById(hotel, {
-      _id: 0,
-      id: '$_id',
+    const foundHotel = await this.hotelModel.findById<
+      WithId<Pick<Hotel, 'title'>>
+    >(hotel, {
       title: 1,
-    })) as WithId<Pick<Hotel, 'title'>>;
+    });
 
+    if (!foundHotel) {
+      throw new NotFoundException();
+    }
     return hotelRoom.map((hotelRoom) => ({
       id: hotelRoom.id,
       description: hotelRoom.description,
@@ -76,55 +78,55 @@ export class HotelRoomsService implements HotelRoomService {
     }));
   }
 
-  async findById(hotelRoomId: ID): Promise<HotelRoomByIdResponse> {
-    try {
-      // TODO откуда тут null вообще
-      const { _id, description, images, hotel } =
-        (await this.hotelRoomModel.findById(hotelRoomId)) as HotelRoomDocument;
+  async findById(hotelRoomId: string): Promise<HotelRoomByIdResponse> {
+    const foundHotelRoom = await this.hotelRoomModel.findById<
+      WithId<HotelRoom>
+    >(hotelRoomId);
 
-      const foundHotel = (await this.hotelModel.findById(hotel, {
-        _id: 0,
-        id: '$_id',
-        title: 1,
-        description: 1,
-      })) as WithId<Hotel>;
-
-      return { id: _id, description, images, hotel: foundHotel };
-    } catch (e) {
+    if (!foundHotelRoom) {
       throw new NotFoundException();
     }
+    const { id, description, images, hotel } = foundHotelRoom;
+
+    const foundHotel = await this.hotelModel.findById<WithId<Hotel>>(hotel, {
+      title: 1,
+      description: 1,
+    });
+
+    if (!foundHotel) {
+      throw new NotFoundException();
+    }
+    return { id, description, images, hotel: foundHotel };
   }
 
   async update(
-    hotelRoomId: ID,
+    hotelRoomId: string,
     params: UpdateHotelRoomParams,
   ): Promise<HotelRoomCreateUpdateResponse> {
-    try {
-      const {
-        description,
-        images,
-        isEnabled,
-        hotel: hotelId,
-      } = (await this.hotelRoomModel.findByIdAndUpdate(
-        hotelRoomId,
-        {
-          description: params.description,
-          hotel: params.hotelId,
-          images: params.images,
-          isEnabled: params.isEnabled,
-        },
-        {
-          new: true,
-        },
-      )) as HotelRoomDocument;
-
-      const hotel = (await this.hotelModel
-        .findById(hotelId, hotelProjection)
-        .exec()) as WithId<Hotel>;
-
-      return { id: hotelRoomId, hotel, description, images, isEnabled };
-    } catch (e) {
+    const updatedHotelRoom = await this.hotelRoomModel.findByIdAndUpdate(
+      hotelRoomId,
+      {
+        description: params.description,
+        hotel: params.hotelId,
+        images: params.images,
+        isEnabled: params.isEnabled,
+      },
+      {
+        new: true,
+      },
+    );
+    if (!updatedHotelRoom) {
       throw new NotFoundException();
     }
+    const { description, images, isEnabled, hotel: hotelId } = updatedHotelRoom;
+
+    const hotel = await this.hotelModel
+      .findById<WithId<Hotel>>(hotelId, hotelProjection)
+      .exec();
+
+    if (!hotel) {
+      throw new NotFoundException();
+    }
+    return { id: hotelRoomId, hotel, description, images, isEnabled };
   }
 }

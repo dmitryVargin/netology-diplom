@@ -16,7 +16,6 @@ import { ChatGateway } from './chat.gateway';
 
 @Module({
   imports: [
-    // ChatModule,
     UsersModule,
     MongooseModule.forFeature([
       { name: SupportRequest.name, schema: SupportRequestSchema },

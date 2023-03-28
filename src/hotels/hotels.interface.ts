@@ -1,4 +1,4 @@
-import { ID, SearchParams, WithId } from '../utils/types';
+import { SearchParams, WithId } from '../utils/types';
 import { Hotel } from './schemas/hotel.schema';
 
 export type SearchHotelParams = SearchParams & {
@@ -16,7 +16,7 @@ export type CreateHotelParams = {
 
 export interface IHotelService {
   create(params: CreateHotelParams): Promise<WithId<Hotel>>;
-  findById(hotelId: ID): Promise<WithId<Hotel>>;
+  findById(hotelId: string): Promise<WithId<Hotel>>;
   search(params: SearchHotelParams): Promise<WithId<Hotel>[]>;
-  update(hotelId: ID, params: UpdateHotelParams): Promise<WithId<Hotel>>;
+  update(hotelId: string, params: UpdateHotelParams): Promise<WithId<Hotel>>;
 }

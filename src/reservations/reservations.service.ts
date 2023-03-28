@@ -6,7 +6,6 @@ import {
   ReservationsResponse,
 } from './reservations.interface';
 import { Reservation, ReservationDocument } from './schemas/reservation.schema';
-import { ID } from '../utils/types';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Hotel, HotelDocument } from '../hotels/schemas/hotel.schema';
@@ -14,6 +13,7 @@ import {
   HotelRoom,
   HotelRoomDocument,
 } from '../hotel-rooms/schemas/hotel-room.schema';
+import { WithId } from '../utils/types';
 
 @Injectable()
 export class ReservationsService implements IReservation {
@@ -31,17 +31,22 @@ export class ReservationsService implements IReservation {
     startDate,
     endDate,
   }: AddReservationParams): Promise<ReservationsResponse> {
-    const {
-      description,
-      images,
-      hotel: hotelId,
-    } = (await this.hotelRoomModel.findById(hotelRoom)) as HotelRoomDocument;
-
-    const hotel = (await this.hotelModel.findById(hotelId, {
+    const foundHotelRoom = await this.hotelRoomModel.findById<
+      WithId<HotelRoom>
+    >(hotelRoom);
+    if (!foundHotelRoom) {
+      throw new NotFoundException();
+    }
+    const { description, images, hotel: hotelId } = foundHotelRoom;
+    const hotel = await this.hotelModel.findById<Hotel>(hotelId, {
       _id: 0,
       title: 1,
       description: 1,
-    })) as Omit<HotelDocument, '_id'>;
+    });
+
+    if (!hotel) {
+      throw new NotFoundException();
+    }
 
     const reservation = new this.reservationModel({
       userId,
@@ -64,8 +69,6 @@ export class ReservationsService implements IReservation {
     };
   }
 
-  // TODO заменить тип айдишшников на стринги где это надо
-
   async getReservationsNew(
     filter: GetReservations,
   ): Promise<ReservationsResponse[]> {
@@ -82,7 +85,7 @@ export class ReservationsService implements IReservation {
         },
         {
           $match: {
-            userId: new mongoose.Types.ObjectId(filter.userId as string),
+            userId: new mongoose.Types.ObjectId(filter.userId),
           },
         },
         {
@@ -149,30 +152,29 @@ export class ReservationsService implements IReservation {
     return reservations.map(({ dateStart, dateEnd, hotelId, roomId, _id }) => {
       const currentHotel = hotels.find((hotel) => {
         return hotel._id.equals(hotelId);
-      }) as HotelDocument;
+      });
       const currentHotelRoom = hotelRooms.find((hotelRoom) =>
         hotelRoom._id.equals(roomId),
-      ) as HotelRoomDocument;
+      );
       return {
         id: _id,
         startDate: dateStart,
         endDate: dateEnd,
         hotel: {
-          title: currentHotel.title,
-          description: currentHotel.description,
+          title: currentHotel?.title || '',
+          description: currentHotel?.description || '',
         },
         hotelRoom: {
-          images: currentHotelRoom.images,
-          description: currentHotelRoom.description,
+          images: currentHotelRoom?.images || [],
+          description: currentHotelRoom?.description || '',
         },
       };
     });
   }
 
-  async removeReservation(id: ID): Promise<void> {
-    try {
-      await this.reservationModel.findOneAndRemove({ _id: id });
-    } catch (e) {
+  async removeReservation(id: string): Promise<void> {
+    const removed = await this.reservationModel.findOneAndRemove({ _id: id });
+    if (!removed) {
       throw new NotFoundException();
     }
   }

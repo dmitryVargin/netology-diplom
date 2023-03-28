@@ -1,13 +1,13 @@
-import { ID, SearchParams, WithId } from '../utils/types';
+import { SearchParams, WithId } from '../utils/types';
 import { HotelRoom } from './schemas/hotel-room.schema';
 import { Hotel } from '../hotels/schemas/hotel.schema';
 
 export type SearchHotelRoomParams = SearchParams & {
-  hotel: ID;
+  hotel: string;
   isEnabled?: boolean;
 };
 export type CreateHotelRoomParams = {
-  hotelId: ID;
+  hotelId: string;
   description: string;
   images: string[];
 };
@@ -35,12 +35,12 @@ export type HotelRoomCreateUpdateResponse = Omit<WithId<HotelRoom>, 'hotel'> & {
 export interface HotelRoomService {
   create(params: CreateHotelRoomParams): Promise<HotelRoomCreateUpdateResponse>;
 
-  findById(hotelRoomId: ID): Promise<HotelRoomByIdResponse>;
+  findById(hotelRoomId: string): Promise<HotelRoomByIdResponse>;
 
   search(params: SearchHotelRoomParams): Promise<HotelRoomSearchResponse[]>;
 
   update(
-    hotelRoomId: ID,
+    hotelRoomId: string,
     params: UpdateHotelRoomParams,
   ): Promise<HotelRoomCreateUpdateResponse>;
 }
