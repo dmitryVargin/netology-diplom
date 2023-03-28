@@ -11,11 +11,24 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import getNonEmptyFields from '../utils/getNonEmptyFields';
 import { LIMIT_DEFAULT, OFFSET_DEFAULT } from '../utils/constants';
+import { IsDefined, IsNumber, IsString } from 'class-validator';
 
 export const hotelProjection = {
   title: 1,
   description: 1,
 } as const;
+
+class CreateUserDto {
+  @IsNumber()
+  @IsDefined()
+  offset?: number;
+  @IsNumber()
+  @IsDefined()
+  limit?: number;
+  @IsString()
+  @IsDefined()
+  title?: string;
+}
 
 @Injectable()
 export class HotelsService implements IHotelService {
@@ -29,12 +42,11 @@ export class HotelsService implements IHotelService {
     return { id, title, description };
   }
 
-  // TODO все bad request по сути должны отлавливаться на этапе валидации
   search({
     limit = LIMIT_DEFAULT,
     offset = OFFSET_DEFAULT,
     title,
-  }: SearchHotelParams): Promise<WithId<Hotel>[]> {
+  }: CreateUserDto): Promise<WithId<Hotel>[]> {
     return this.hotelModel
       .find<WithId<Hotel>>(getNonEmptyFields({ title }), hotelProjection)
       .skip(offset)

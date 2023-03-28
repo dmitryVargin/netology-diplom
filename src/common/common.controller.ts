@@ -34,7 +34,6 @@ export class CommonController {
   @AllowAny()
   getHotelRooms(
     @Query() params: SearchHotelRoomParams,
-    // TODO добавить @AllowAny и @User там где нужно
     @User() user?: RequestUser,
   ) {
     return this.hotelRoomsService.search({
